@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Windows.Input;
 using MVVMLib;
+using System.Windows;
 
 namespace ABU2021_ControlAndDebug.ViewModels
 {
@@ -15,14 +16,15 @@ namespace ABU2021_ControlAndDebug.ViewModels
         public Models.OutputLog Log { get; private set; }
         public Models.Communicator Communicator{ get; private set; }
         public Models.JoypadHandl Joypad { get; private set; }
+        public Models.DebugSate DebugSate { get; private set; }
         #endregion
 
 
         #region Property
         private bool _isEnableDissconnect = false;
         private bool _isEnableConnect = true;
-        private bool _isCheckedSTM_USB = false;
-        private bool _isCheckedROS_Wifi = false;
+        private bool _isCheckedStmUsb = false;
+        private bool _isCheckedRosWifi = false;
         private bool _isCheckedJoypad = false;
         private string _connectedText = "接続デバイス無し";
         private string _connectedJoypadText = "ジョイパッド無し";
@@ -37,15 +39,15 @@ namespace ABU2021_ControlAndDebug.ViewModels
             get => _isEnableConnect;
             private set { SetProperty(ref _isEnableConnect, value); }
         }
-        public bool IsCheckedSTM_USB
+        public bool IsCheckedStmUsb
         {
-            get => _isCheckedSTM_USB;
-            set { SetProperty(ref _isCheckedSTM_USB, value); }
+            get => _isCheckedStmUsb;
+            set { SetProperty(ref _isCheckedStmUsb, value); }
         }
-        public bool IsCheckedROS_Wifi
+        public bool IsCheckedRosWifi
         {
-            get => _isCheckedROS_Wifi;
-            set { SetProperty(ref _isCheckedROS_Wifi, value); }
+            get => _isCheckedRosWifi;
+            set { SetProperty(ref _isCheckedRosWifi, value); }
         }
         public bool IsCheckedJoypad
         {
@@ -66,31 +68,57 @@ namespace ABU2021_ControlAndDebug.ViewModels
 
 
         #region Command
-        private ICommand _fileClick;
-        private ICommand _connectTR_ROS_WifiClick;
-        private ICommand _connectDR_ROS_WifiClick;
-        private ICommand _connectSTM_USBClick;
-        private ICommand _discinnectClick;
-        private ICommand _activeJoypadClick;
+        private ICommand _file_Click;
+        private ICommand _shutdown_Click;
+        private ICommand _minimize_Click;
+        private ICommand _connectTrRosWifi_Click;
+        private ICommand _connectDrRosWifi_Click;
+        private ICommand _connectStmUsb_Click;
+        private ICommand _disconnect_Click;
+        private ICommand _activeJoypad_Click;
 
-        public ICommand FileClick
+        public ICommand File_Click
         {
             get
             {
-                return _fileClick ??
-                    (_fileClick = CreateCommand(
+                return _file_Click ??
+                    (_file_Click = CreateCommand(
                         (object sender) =>
                         {
 
                         }));
             }
         }
-        public ICommand ConnectTR_ROS_WifiClick
+        public ICommand Shutdown_Click
         {
             get
             {
-                return _connectTR_ROS_WifiClick ??
-                    (_connectTR_ROS_WifiClick = CreateCommand(
+                return _shutdown_Click ??
+                    (_shutdown_Click = CreateCommand(
+                        (object sender) =>
+                        {
+                            Application.Current.Shutdown();
+                        }));
+            }
+        }
+        public ICommand Minimize_Click
+        {
+            get
+            {
+                return _minimize_Click ??
+                    (_minimize_Click = CreateCommand(
+                        (object sender) =>
+                        {
+                            Application.Current.MainWindow.WindowState = WindowState.Minimized;
+                        }));
+            }
+        }
+        public ICommand ConnectTrRosWifi_Click
+        {
+            get
+            {
+                return _connectTrRosWifi_Click ??
+                    (_connectTrRosWifi_Click = CreateCommand(
                         (object sender) =>
                         {
                             Log.WiteLine("ROS(Wifi)接続開始...");
@@ -99,27 +127,27 @@ namespace ABU2021_ControlAndDebug.ViewModels
                             {
                                 try
                                 {
-                                    await Communicator.ConnectROS(Core.ControlType.TcpPort.TR);
+                                    await Communicator.ConnectRosAsync(Core.ControlType.TcpPort.TR0);
                                 }
                                 catch
                                 {
                                     Log.WiteLine("接続失敗");
                                     IsEnableConnect = true;
-                                    IsCheckedROS_Wifi = false;
+                                    IsCheckedRosWifi = false;
                                     return;
                                 }
                                 Log.WiteLine("接続成功");
-                                IsCheckedROS_Wifi = true;
+                                IsCheckedRosWifi = true;
                             });
                         }));
             }
         }
-        public ICommand ConnectDR_ROS_WifiClick
+        public ICommand ConnectDrRosWifi_Click
         {
             get
             {
-                return _connectDR_ROS_WifiClick ??
-                    (_connectDR_ROS_WifiClick = CreateCommand(
+                return _connectDrRosWifi_Click ??
+                    (_connectDrRosWifi_Click = CreateCommand(
                         (object sender) =>
                         {
                             Log.WiteLine("ROS(Wifi)接続開始...");
@@ -128,70 +156,74 @@ namespace ABU2021_ControlAndDebug.ViewModels
                             {
                                 try
                                 {
-                                    await Communicator.ConnectROS(Core.ControlType.TcpPort.DR);
+                                    await Communicator.ConnectRosAsync(Core.ControlType.TcpPort.DR0);
                                 }
                                 catch
                                 {
                                     Log.WiteLine("接続失敗");
                                     IsEnableConnect = true;
-                                    IsCheckedROS_Wifi = false;
+                                    IsCheckedRosWifi = false;
                                     return;
                                 }
                                 Log.WiteLine("接続成功");
-                                IsCheckedROS_Wifi = true;
+                                IsCheckedRosWifi = true;
                             });
                         }));
             }
         }
-        public ICommand ConnectSTM_USBClick
+        public ICommand ConnectStmUsb_Click
         {
             get
             {
-                return _connectSTM_USBClick ??
-                    (_connectSTM_USBClick = CreateCommand(
+                return _connectStmUsb_Click ??
+                    (_connectStmUsb_Click = CreateCommand(
                         (object sender) =>
                         {
                             Log.WiteLine("STM(USB)接続開始...");
-                            try
+                            Task.Run(async () =>
                             {
-                                Communicator.ConnectSTM();
-                            }
-                            catch
-                            {
-                                Log.WiteLine("接続失敗");
-                                IsCheckedSTM_USB = false;
-                                return;
-                            }
-                            Log.WiteLine("接続成功");
-                            IsCheckedSTM_USB = true;
+                                try
+                                {
+                                    await Communicator.ConnectStmAsync();
+                                }
+                                catch
+                                {
+                                    Log.WiteLine("接続失敗");
+                                    IsEnableConnect = true;
+                                    IsCheckedStmUsb = false;
+                                    return;
+                                }
+                                Log.WiteLine("接続成功");
+                                IsCheckedStmUsb = true;
+                            });
                         }));
             }
         }
-        public ICommand DiscinnectClick
+        public ICommand Disconnect_Click
         {
             get
             {
-                return _discinnectClick ??
-                    (_discinnectClick = CreateCommand(
+                return _disconnect_Click ??
+                    (_disconnect_Click = CreateCommand(
                         (object sender) =>
                         {
                             if (!IsEnableConnect)
                             {
                                 Communicator.Disconnect();
-                                IsCheckedSTM_USB = false;
-                                IsCheckedROS_Wifi = false;
+                                IsCheckedStmUsb = false;
+                                IsCheckedRosWifi = false;
                                 Log.WiteLine("切断");
                             }
                         }));
             }
         }
-        public ICommand ActiveJoypadClick
+        public ICommand ActiveJoypad_Click
         {
             get
             {
                 //現状ジョイパッドには切断続の概念が無い
-                return _activeJoypadClick ??
-                    (_activeJoypadClick = CreateCommand(
+                return _activeJoypad_Click ??
+                    (_activeJoypad_Click = CreateCommand(
                         (object sender) =>
                         {
                             if (Joypad.IsExisted)
@@ -213,6 +245,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
             Log = Models.OutputLog.GetInstance;
             Communicator = Models.Communicator.GetInstance;
             Joypad = Models.JoypadHandl.GetInstance;
+            DebugSate = Models.DebugSate.GetInstance;
 
             Communicator.PropertyChanged += Communicator_PropertyChanged;
             Joypad.PropertyChanged += Joypad_PropertyChanged;
@@ -235,8 +268,8 @@ namespace ABU2021_ControlAndDebug.ViewModels
 
                 if (!Communicator.IsConnected)
                 {
-                    IsCheckedSTM_USB = false;
-                    IsCheckedROS_Wifi = false;
+                    IsCheckedStmUsb = false;
+                    IsCheckedRosWifi = false;
                 }
                 ConnectedText = "接続:" + Communicator.ConnectedDviseName;
             }

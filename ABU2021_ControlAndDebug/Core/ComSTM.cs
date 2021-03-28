@@ -11,25 +11,27 @@ using JoypadControl;
 
 namespace ABU2021_ControlAndDebug.Core
 {
-    class ComSTM
+    class ComStm : ComDevice
     {
         private static readonly int MaxQueueSize = 256;
         private SerialPort _port;
         private ConcurrentQueue<ReceiveDataMsg> _readMsgQueue = new ConcurrentQueue<ReceiveDataMsg>();
         private List<byte> _readDataBuff = new List<byte>();
+        private bool _isConencted = false;
+        private Task _readTask;
 
 
         #region Property
-        public ControlType.USBBoardPID BoardType{ get; private set; }
-        public bool IsConnected { get; private set; }
+        public bool IsConnected { get => _isConencted; }
+        public ControlType.UsbBoardPid BoardType{ get; private set; }
         #endregion
 
 
 
-        public ComSTM()
+        public ComStm()
         {
         }
-        ~ComSTM()
+        ~ComStm()
         {
             if (IsConnected) Disconnect();
         }
@@ -38,61 +40,56 @@ namespace ABU2021_ControlAndDebug.Core
 
         #region Method
         #region public
-        public void Connect()
+        public Task Connect()
         {
             if (IsConnected) throw new InvalidOperationException("Already connected");
-            var ports = GetComports();
-            bool isFound = false;
 
-#if DEBUG
-            //_log.WiteDebugMsg("Serch VID : " + Core.ControlType.STM_VID.ToString("X4"));
-            /*foreach (var p in ports)
+            return Task.Run(() =>
             {
-                if (Regex.IsMatch(p.PNPDeviceID, @"^USB"))
-                    _log.WiteDebugMsg("Get Port PNP : " + p.PNPDeviceID);
-            }*/
-#endif
+                var ports = GetComports();
+                bool isFound = false;
 
-            foreach (var board in Enum.GetValues(typeof(Core.ControlType.USBBoardPID)))
-            {
-                try
+                foreach (var board in Enum.GetValues(typeof(Core.ControlType.UsbBoardPid)))
                 {
-                    DestinationSelection(ControlType.STM_VID, (int)board, ports);
-                }
-                catch (ArgumentException e)
-                {
-                    if (e.ParamName == "vid")
+                    try
                     {
-                        throw new InvalidOperationException("STM device not found");
+                        DestinationSelection(ControlType.STM_VID, (int)board, ports);
                     }
-                    else continue;
+                    catch (ArgumentException e)
+                    {
+                        if (e.ParamName == "vid")
+                        {
+                            throw new InvalidOperationException("STM device not found");
+                        }
+                        else continue;
+                    }
+                    catch
+                    {
+                        throw;
+                    }
+                    isFound = true;
+                    BoardType = (Core.ControlType.UsbBoardPid)board;
+                    break;
                 }
-                catch
+                if (!isFound)
                 {
-                    throw;
+                    throw new InvalidOperationException("No valid STM device found");
                 }
-                isFound = true;
-                BoardType = (Core.ControlType.USBBoardPID)board;
-                break;
-            }
-            if (!isFound)
-            {
-                throw new InvalidOperationException("No valid STM device found");
-            }
 
 
-            _port.DtrEnable = true;
-            _port.RtsEnable = true;
-            try { _port.Open(); }
-            catch { throw; }
-            IsConnected = true;
+                _port.DtrEnable = true;
+                _port.RtsEnable = true;
+                try { _port.Open(); }
+                catch { throw; }
+                _isConencted = true;
+                _readTask = ReadData();
+            });
         }
-
         public void Disconnect()
         {
             _readDataBuff.Clear();
-            _readMsgQueue = new ConcurrentQueue<ReceiveDataMsg>(); 
-            if (!IsConnected) throw new InvalidOperationException("Not connected");
+            _readMsgQueue = new ConcurrentQueue<ReceiveDataMsg>();
+            if (!IsConnected) return;//throw new InvalidOperationException("Not connected");
             try
             {
                 _port.Close();
@@ -103,10 +100,9 @@ namespace ABU2021_ControlAndDebug.Core
             }
             finally
             {
-                IsConnected = false;
+                _isConencted = false;
             }
         }
-
 
         /// <summary>
         /// 送信
@@ -114,18 +110,22 @@ namespace ABU2021_ControlAndDebug.Core
         /// <typeparam name="T"></typeparam>
         /// <param name="header"></param>
         /// <param name="data"></param>
-        public void Send(SendDataMsg msg)
+        public async Task SendMsgAsync(SendDataMsg msg)
         {
-            var sendData = COBS_Encode(msg.ConvByte());
-            try
+            await Task.Run(() =>
             {
-                _port.Write(sendData, 0, sendData.Length);
-            }
-            catch
-            {
-                Disconnect();
-                throw new InvalidOperationException("Connecton error");
-            }
+                var sendData = COBS_Encode(msg.ConvByte());
+                try
+                {
+                    _port.Write(sendData, 0, sendData.Length);
+                }
+                catch
+                {
+                    Disconnect();
+                    throw new InvalidOperationException("Connecton error");
+                }
+            });
+
         }
         /// <summary>
         /// 受信メッセージの取り出し
@@ -133,20 +133,19 @@ namespace ABU2021_ControlAndDebug.Core
         /// <returns></returns>
         public async Task<ReceiveDataMsg> ReadMsgAsync()
         {
-            var task = Task<ReceiveDataMsg>.Run(() =>
+            return await Task.Run(async () =>
             {
                 ReceiveDataMsg msg;
                 while (true)
                 {
                     if (!_readMsgQueue.IsEmpty)
                     {
-                        if(_readMsgQueue.TryDequeue(out msg))
+                        if (_readMsgQueue.TryDequeue(out msg))
                             return msg;
                     }
+                    await Task.Delay(50);
                 }
             });
-
-            return await task;
         }
         #endregion
 
@@ -196,6 +195,7 @@ namespace ABU2021_ControlAndDebug.Core
 
             _port = new SerialPort(pnpPort.PortName, 115200, Parity.None, 8, StopBits.One);
         }
+
         /// <summary>
         /// 受信バイト読み
         /// </summary>
@@ -205,7 +205,7 @@ namespace ABU2021_ControlAndDebug.Core
             return Task.Run(() =>
             {
                 int byteData;
-                while (true)
+                while (_isConencted)
                 {
                     try
                     {

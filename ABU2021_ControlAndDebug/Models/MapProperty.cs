@@ -6,9 +6,7 @@ using System.Windows.Media.Imaging;
 namespace ABU2021_ControlAndDebug.Models
 {
     /// <summary>
-    /// 地図情報
-    /// マシン位置はマシンのモデルへ
-    /// 表示についてはVMへ
+    /// フィールドとオブジェクトの情報
     /// </summary>
     class MapProperty : NotifyPropertyChanged
     {

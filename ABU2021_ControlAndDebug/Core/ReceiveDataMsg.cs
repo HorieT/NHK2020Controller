@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace ABU2021_ControlAndDebug.Core
 {
@@ -26,6 +27,7 @@ namespace ABU2021_ControlAndDebug.Core
             //float
             I_ANGLE = 0x80,
             //sp
+            POSITION = 0xE0,
         }
 
         public static readonly Dictionary<HeaderType, Type> DataType = new Dictionary<HeaderType, Type>
@@ -35,17 +37,16 @@ namespace ABU2021_ControlAndDebug.Core
             {HeaderType.I_LOAD_END,typeof(bool)},
             {HeaderType.INJECT_END, typeof(bool)},
             {HeaderType.I_ANGLE, typeof(float)},
+            {HeaderType.POSITION, typeof((Vector, double))},
         };
         #endregion
 
         public ReceiveDataMsg(string msg)
         {
-            var matchHead = Regex.Match(msg, @"^\S+(?=:)");
-            var matchData = Regex.Match(msg, @"(?<=:)\S+");
-
+            var split = Regex.Split(msg, @":");
             try
             {
-                Header = (HeaderType)Enum.Parse(typeof(HeaderType), matchHead.Value);
+                Header = (HeaderType)Enum.Parse(typeof(HeaderType), split[0]);
             }
             catch
             {
@@ -55,38 +56,43 @@ namespace ABU2021_ControlAndDebug.Core
 
             try
             {
+                string msgData = split[1];
                 //型変換 switchステートは使えない
                 if (DataType[Header] == typeof(bool))
                 {
-                    Data = bool.Parse(matchData.Value);
+                    Data = bool.Parse(msgData);
                 }
                 else if (DataType[Header] == typeof(byte))
                 {
-                    Data = byte.Parse(matchData.Value);
+                    Data = byte.Parse(msgData);
                 }
                 else if (DataType[Header] == typeof(char))
                 {
-                    Data = char.Parse(matchData.Value);
+                    Data = char.Parse(msgData);
                 }
                 else if (DataType[Header] == typeof(ushort))
                 {
-                    Data = ushort.Parse(matchData.Value);
+                    Data = ushort.Parse(msgData);
                 }
                 else if (DataType[Header] == typeof(short))
                 {
-                    Data = short.Parse(matchData.Value);
+                    Data = short.Parse(msgData);
                 }
                 else if (DataType[Header] == typeof(uint))
                 {
-                    Data = uint.Parse(matchData.Value);
+                    Data = uint.Parse(msgData);
                 }
                 else if (DataType[Header] == typeof(int))
                 {
-                    Data = int.Parse(matchData.Value);
+                    Data = int.Parse(msgData);
                 }
                 else if (DataType[Header] == typeof(float))
                 {
-                    Data = float.Parse(matchData.Value);
+                    Data = float.Parse(msgData);
+                }
+                else if (DataType[Header] == typeof((Vector, double)))
+                {
+                    Data = ToPosition(msgData);
                 }
                 else
                 {
@@ -141,6 +147,10 @@ namespace ABU2021_ControlAndDebug.Core
                 {
                     Data = BitConverter.ToSingle(msg.ToArray(), 1);
                 }
+                else if (DataType[Header] == typeof((Vector, double)))
+                {
+                    Data = ToPosition(msg, 1);
+                }
                 else
                 {
                     throw new NotImplementedException();
@@ -161,7 +171,28 @@ namespace ABU2021_ControlAndDebug.Core
 
 
         #region Method
-
+        private static (Vector, double) ToPosition(String msgData)
+        {
+            var split = Regex.Split(msgData, ",");
+            try
+            {
+                Vector vec = new Vector(double.Parse(split[0]), double.Parse(split[1]));
+                double rad = double.Parse(split[2]);
+                return (vec, rad);
+            }
+            catch
+            {
+                throw new ArgumentException();
+            }
+        }
+        private static (Vector, double) ToPosition(IReadOnlyList<byte> msg, int offset)
+        {
+            if (msg.Count != 12 + offset) throw new ArgumentException();
+            var array = msg.ToArray();
+            Vector vec = new Vector(BitConverter.ToSingle(array, offset), BitConverter.ToSingle(array, offset+4));
+            double rad = BitConverter.ToSingle(array, offset+8);
+            return (vec, rad);
+        }
         #endregion
     }
 }

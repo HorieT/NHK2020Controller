@@ -49,11 +49,16 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>cake.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Management" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Windows.Input.Manipulations" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -72,23 +77,27 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="CenterOffsetConverter.cs" />
+    <Compile Include="Core\ComDevice.cs" />
     <Compile Include="Core\Comport.cs" />
-    <Compile Include="Core\ComROS.cs" />
-    <Compile Include="Core\ComSTM.cs" />
-    <Compile Include="Core\InterfaceUSB.cs" />
-    <Compile Include="Core\InterfaceWifi.cs" />
-    <Compile Include="Core\DeviceInterfaceBace.cs" />
+    <Compile Include="Core\ComRos.cs" />
+    <Compile Include="Core\ComStm.cs" />
+    <Compile Include="Core\ReceiveDataMsg.cs" />
+    <Compile Include="Core\RosJoyConverter.cs" />
+    <Compile Include="Core\SendDataMsg.cs" />
     <Compile Include="Models\Communicator.cs" />
-    <Compile Include="Core\InterfaceBT.cs" />
-    <Compile Include="Models\ControlDR.cs" />
-    <Compile Include="Models\ControlTR.cs" />
+    <Compile Include="Models\ControlDR0.cs" />
+    <Compile Include="Models\ControlTR0.cs" />
     <Compile Include="Core\ControlType.cs" />
+    <Compile Include="Models\DebugSate.cs" />
     <Compile Include="Models\JoypadHandl.cs" />
+    <Compile Include="Models\MapProperty.cs" />
     <Compile Include="Models\OutputLog.cs" />
     <Compile Include="SubWindows\JoypadTestWindow.xaml.cs">
       <DependentUpon>JoypadTestWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ViewModels\ControlTabTR.cs" />
+    <Compile Include="ViewModels\ControlTabTR0.cs" />
+    <Compile Include="ViewModels\MapControl.cs" />
     <Compile Include="ViewModels\MenuBar.cs" />
     <Compile Include="ViewModels\OutputLog.cs" />
     <Page Include="MainWindow.xaml">
@@ -136,6 +145,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Resources\" />
     <Folder Include="Views\" />
   </ItemGroup>
   <ItemGroup>
@@ -159,6 +169,18 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="cake.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="img\pl_color.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="img\pl_p2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="img\pl_p3.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -3,12 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Runtime;
 using MVVMLib;
 
 namespace ABU2021_ControlAndDebug.Models
 {
     class OutputLog : NotifyPropertyChanged
     {
+        private DebugSate _debugSate;
+
+
         #region Singleton instance
         private static OutputLog _instance;
         public static OutputLog GetInstance
@@ -18,7 +22,10 @@ namespace ABU2021_ControlAndDebug.Models
                 return _instance ?? (_instance = new OutputLog());
             }
         }
-        private OutputLog() { }
+        private OutputLog() 
+        {
+            _debugSate = DebugSate.GetInstance;
+        }
         #endregion
 
 
@@ -43,11 +50,12 @@ namespace ABU2021_ControlAndDebug.Models
         }
         public void WiteDebugMsg(string s)
         {
-            Text += "[Debug]" + s + '\n';
+            if (!_debugSate.IsOutputMsg) return;
+            Text += "[Debug] : " + DateTime.Now.ToString("HH:mm:ss:fff") + " " + s + '\n';
         }
         public void WiteErrorMsg(string s)
         {
-            Text += "[Error]" + s + '\n';
+            Text += "[Error] : " + DateTime.Now.ToString("HH:mm:ss:fff") + " " + s + '\n';
         }
     }
 }

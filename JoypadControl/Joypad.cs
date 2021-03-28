@@ -66,9 +66,9 @@ namespace JoypadControl
             public UInt32 dwXpos;                /* x position */
             public UInt32 dwYpos;                /* y position */
             public UInt32 dwZpos;                /* z position */
-            public UInt32 dwRpos;                /* rudder/4th axis position */
-            public UInt32 dwUpos;                /* 5th axis position */
-            public UInt32 dwVpos;                /* 6th axis position */
+            public UInt32 dwZrot;                /* rudder/4th axis position */
+            public UInt32 dwYrot;                /* 5th axis position */
+            public UInt32 dwXrot;                /* 6th axis position */
             public UInt32 dwButtons;             /* button states */
             public UInt32 dwButtonNumber;        /* current button number pressed */
             public UInt32 dwPOV;                 /* point of view state */

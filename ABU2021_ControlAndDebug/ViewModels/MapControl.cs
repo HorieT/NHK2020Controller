@@ -5,22 +5,29 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using MVVMLib;
 
 namespace ABU2021_ControlAndDebug.ViewModels
 {
+    /// <summary>
+    /// マップタブのVM
+    /// 座標データを画像のピクセル位置に変換
+    /// </summary>
     class MapControl : ViewModel
     {
         private static readonly double MagnificationScale = 1.15;
+        private static readonly double MachineSizeDef = 1000;//描画用の想定値なので実際とは関係ない
         private Point _scrollViewerDragStart;
 
         #region Model
         public Models.OutputLog Log { get; private set; }
         public Models.MapProperty MapProperty { get; private set; }
-        public Models.ControlTR TR{ get; private set; }
-        public Models.ControlDR DR { get; private set; }
+        public Models.ControlTR0 TR{ get; private set; }
+        public Models.ControlDR0 DR { get; private set; }
+        public Models.Communicator Communicator { get; set; }
         #endregion
 
 
@@ -29,16 +36,24 @@ namespace ABU2021_ControlAndDebug.ViewModels
             #region get instance
             Log = Models.OutputLog.GetInstance;
             MapProperty = Models.MapProperty.GetInstance;
-            TR = Models.ControlTR.GetInstance;
-            DR = Models.ControlDR.GetInstance;
+            TR = Models.ControlTR0.GetInstance;
+            DR = Models.ControlDR0.GetInstance;
+            Communicator = Models.Communicator.GetInstance;
             #endregion
 
+            #region set img
             MapHeight = MapProperty.MapPictureSoruce.PixelHeight;
             MapWidth = MapProperty.MapPictureSoruce.PixelWidth;
             TableHeight = MapProperty.Table2PictureSoruce.PixelHeight;
             TableWidth = MapProperty.Table2PictureSoruce.PixelWidth;
             MapScale = new Vector(MapWidth / Models.MapProperty.MapSize.X, MapHeight / Models.MapProperty.MapSize.Y);
+            #endregion
+
+            TR.PropertyChanged += TR_PropertyChanged;
+            DR.PropertyChanged += DR_PropertyChanged;
+            Communicator.PropertyChanged += Communicator_PropertyChanged;
         }
+
 
 
         #region Property
@@ -47,7 +62,14 @@ namespace ABU2021_ControlAndDebug.ViewModels
         private double _mapHeight;
         private double _tableWidth;
         private double _tableHeight;
+        private bool _isMachineEnabled;
+        private Point _machineCenter;
+        private double _machineRot;
+        private string _machineName;
+        //private Transform _canvasTransform;
 
+
+        #region oneTime bind
         public double MapWidth
         {
             get => _mapWidth;
@@ -143,6 +165,32 @@ namespace ABU2021_ControlAndDebug.ViewModels
                 return v;
             }
         }
+        public Vector MachineSize
+        {
+            get => MachineSizeDef * MapScale;
+        }
+        #endregion
+        #region oneWay bind
+        public bool IsMachineEnabled
+        {
+            get => _isMachineEnabled;
+            set { SetProperty(ref _isMachineEnabled, value); }
+        }
+        public Point MachineCenter
+        {
+            get => _machineCenter;
+            private set { SetProperty(ref _machineCenter, value); }
+        }
+        public double MachineRot
+        {
+            get => _machineRot;
+            private set { SetProperty(ref _machineRot, value); }
+        }
+        public string MachineName {
+            get => _machineName;
+            set { SetProperty(ref _machineName, value); }
+        }
+        #endregion
         #endregion
 
 
@@ -313,6 +361,60 @@ namespace ABU2021_ControlAndDebug.ViewModels
 
 
         #region Method
+        private Point RealToCanvas(Point realPoint)
+        {
+            return new Point(realPoint.X * MapScale.X, MapHeight - realPoint.Y * MapScale.Y);
+        }
+        private Point RealToCanvas(Vector realPoint)
+        {
+            return new Point(realPoint.X * MapScale.X, MapHeight - realPoint.Y * MapScale.Y);
+        }
+
+
+
+
+        private void TR_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if(e.PropertyName == nameof(TR.Positon))
+            {
+                MachineCenter = RealToCanvas(TR.Positon);
+            }
+            else if (e.PropertyName == nameof(TR.PositonRot))
+            {
+                MachineRot = -TR.PositonRot * 180.0 / Math.PI;
+            }
+            else if(e.PropertyName == nameof(TR.IsEnabaled))
+            {
+                IsMachineEnabled = TR.IsEnabaled;
+            }
+        }
+        private void DR_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(DR.Positon))
+            {
+                MachineCenter = RealToCanvas(DR.Positon);
+            }
+            else if (e.PropertyName == nameof(DR.PositonRot))
+            {
+                MachineRot = -DR.PositonRot * 180.0 / Math.PI;
+            }
+            else if (e.PropertyName == nameof(DR.IsEnabaled))
+            {
+                IsMachineEnabled = DR.IsEnabaled;
+            }
+        }
+
+
+        private void Communicator_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if(e.PropertyName == nameof(Communicator.Device))
+            {
+                MachineName = Communicator.Device.ToString();
+            }
+        }
+
+        #region Converter
+        #endregion
         #endregion
     }
 }

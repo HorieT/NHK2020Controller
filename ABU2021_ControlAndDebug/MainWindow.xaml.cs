@@ -28,19 +28,5 @@ namespace ABU2021_ControlAndDebug
             MainGrid.Height = (SystemParameters.WorkArea.Height + 30) / 1.3;//何故かGDPのディスプレイだとずれるのでプラス
             MainGrid.Width = SystemParameters.WorkArea.Width / 1.3;
         }
-
-        /// <summary>
-        /// オートスクロールの為だけのメソッド
-        /// ホントは添付ビヘイビアとかで解決すべきなんだろうけど、
-        /// 下手にVMに癒着させるよりかはマシ（ほんまか？）
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OutputLog_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            var box = e.Source as TextBox;
-            if (box == null) return;
-            box.ScrollToEnd();
-        }
     }
 }

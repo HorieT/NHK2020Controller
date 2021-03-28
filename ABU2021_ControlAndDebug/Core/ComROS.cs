@@ -9,26 +9,27 @@ using System.Threading.Tasks;
 
 namespace ABU2021_ControlAndDebug.Core
 {
-    class ComROS
+    class ComRos : ComDevice
     {
         //private InterfaceWifi _wifi;
         //private InterfaceBT _bluetooth;
         private NetworkStream _wifiStream;
         private StreamReader _wifiReader;//ネーミングセンス皆無
         private StreamWriter _wifiWriter;//ネーミングセンス皆無
+        private bool _isConencted = false;
 
 
         #region Property
-        public bool IsConnected { get; private set; }
-        public ControlType.TcpPort Port { get; private set; }
+        public bool IsConnected { get => _isConencted; }
+        public ControlType.TcpPort Port { get; set; }
         #endregion
 
 
 
-        public ComROS()
+        public ComRos()
         {
         }
-        ~ComROS()
+        ~ComRos()
         {
             if (IsConnected) Disconnect();
         }
@@ -39,11 +40,10 @@ namespace ABU2021_ControlAndDebug.Core
 
 
         #region Method
-        public Task Connect(ControlType.TcpPort port)
+        public Task Connect()
         {
             if (IsConnected) throw new InvalidOperationException("Already connected to TCP/IP on Wifi");
 
-            Port = port;
             return Task.Run(() =>
             {
                 try
@@ -55,13 +55,13 @@ namespace ABU2021_ControlAndDebug.Core
                     _wifiWriter = new StreamWriter(_wifiStream, Encoding.UTF8);
                 }
                 catch { throw; }
-                IsConnected = true;
+                _isConencted = true;
             });
         }
 
         public void Disconnect()
         {
-            if (!IsConnected) throw new InvalidOperationException("Not connected to TCP/IP on Wifi");
+            if (!IsConnected) return;//throw new InvalidOperationException("Not connected to TCP/IP on Wifi");
             try
             {
                 //_wifiReader.Close();
@@ -73,7 +73,7 @@ namespace ABU2021_ControlAndDebug.Core
             }
             finally
             {
-                IsConnected = false;
+                _isConencted = false;
             }
         }
 
@@ -84,12 +84,13 @@ namespace ABU2021_ControlAndDebug.Core
         /// <typeparam name="T"></typeparam>
         /// <param name="header"></param>
         /// <param name="data"></param>
-        public void Send(SendDataMsg msg)
+        public async Task SendMsgAsync(SendDataMsg msg)
         {
             if (!IsConnected) throw new InvalidOperationException("Not connected");
+            
             try
             {
-                _wifiWriter.WriteLine(msg.ConvString());
+                await _wifiWriter.WriteLineAsync(msg.ConvString());
             }
             catch
             {

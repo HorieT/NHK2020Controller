@@ -45,10 +45,10 @@ namespace JoypadControl
         { get { return (((float)JoyInfoEx.dwYpos - 32767) / 32768); } }
 
         public float RightStickX
-        { get { return (((float)JoyInfoEx.dwUpos - 32767) / 32768); } }
+        { get { return (((float)JoyInfoEx.dwYrot - 32767) / 32768); } }
 
         public float RightStickY
-        { get { return (((float)JoyInfoEx.dwRpos - 32767) / 32768); } }
+        { get { return (((float)JoyInfoEx.dwZrot - 32767) / 32768); } }
 
         public float Trigger
         { get { return (((float)JoyInfoEx.dwZpos - 32767) / 32768); } }

@@ -23,8 +23,7 @@ namespace ABU2021_ControlAndDebug.Models
         private OutputLog _log;
         private JoypadHandl _joypad;
         private Timer _sendMsgTimer;
-        private Core.ComROS _ros;
-        private Core.ComSTM _stm;//こいつら抽象化するのアリ
+        private Core.ComDevice _comDevice;
 
 
         #region Singleton instance
@@ -40,29 +39,25 @@ namespace ABU2021_ControlAndDebug.Models
         {
             _log = OutputLog.GetInstance;
             _joypad = JoypadHandl.GetInstance;
-            _ros = new Core.ComROS();
-            _stm = new Core.ComSTM();
-
+        }
+        ~Communicator()
+        {
+            if (IsConnected) Disconnect();
         }
         #endregion
 
 
 
         #region Property
-        private Core.ControlType.Machine _machine = Core.ControlType.Machine.Etc;
-        private bool _isConnected;
+        private Core.ControlType.Device _machine = Core.ControlType.Device.Etc;
         private int _sendMsgPeriodMs = 50;
 
-        public Core.ControlType.Machine Machine
+        public Core.ControlType.Device Device
         {
             get => _machine;
             private set { SetProperty(ref _machine, value); }
         }
-        public bool IsConnected
-        {
-            get => _isConnected;
-            private set { SetProperty(ref _isConnected, value); }
-        }
+        public bool IsConnected{ get => _comDevice != null; }
         public int SendMsgPeriod
         {
             get => _sendMsgPeriodMs;
@@ -77,49 +72,55 @@ namespace ABU2021_ControlAndDebug.Models
         {
             get
             {
-                if (_stm.IsConnected) return "STマイコン-USB(" + _stm.BoardType.ToString() + ")";
-                if (_ros.IsConnected) return "ROS-Wifi(" + _ros.Port.ToString() + ")";
+                var stm = _comDevice as Core.ComStm;
+                var ros = _comDevice as Core.ComRos;
+                if (stm != null) return "STマイコン-USB(" + stm.BoardType.ToString() + ")";
+                if (ros != null) return "ROS-Wifi(" + ros.Port.ToString() + ")";
                 return "無し";
             }
         }
-        public bool IsConnectedSTM
+        public bool IsConnectedStm
         {
-            get{ return _stm.IsConnected; }
+            get{ return _comDevice is Core.ComStm; }
         }
-        public bool IsConnectedROS
+        public bool IsConnectedRos
         {
-            get { return _ros.IsConnected; }
+            get { return _comDevice is Core.ComRos; }
         }
         #endregion
 
 
         #region Method
-        public Task ConnectROS(Core.ControlType.TcpPort machine, bool use_bt = false)
+        public async Task ConnectRosAsync(Core.ControlType.TcpPort machine, bool useBt = false)
         {
-            if (_isConnected) throw new InvalidOperationException("already connected");
-            if (use_bt) throw new NotImplementedException("Don't use bluetooth");
+            if (IsConnected) throw new InvalidOperationException("already connected");
+            if (useBt) throw new NotImplementedException("Don't use bluetooth");
 
-            return Task.Run(async () => {
-                try
-                {
-                    await _ros.Connect(machine);
-                }
-                catch
-                {
-                    throw;
-                }
-                _sendMsgTimer = new Timer(PeriodicSendMsg, null, 0, SendMsgPeriod);
-                IsConnected = true;
-            });
-        }
-        public void ConnectSTM()
-        {
-            if (_isConnected) throw new InvalidOperationException("already connected");
-
-
+            var ros = new Core.ComRos();
+            ros.Port = machine;
             try
             {
-                _stm.Connect();
+                await ros.Connect();
+            }
+            catch
+            {
+                throw;
+            }
+            _comDevice = ros;
+            _sendMsgTimer = new Timer(PeriodicSendMsg, null, 0, SendMsgPeriod);
+            Device = Core.ControlType.ToDevice(machine);
+            ConnectStatusChage();
+
+        }
+        public async Task ConnectStmAsync()
+        {
+            if (IsConnected) throw new InvalidOperationException("already connected");
+
+
+            var stm = new Core.ComStm();
+            try
+            {
+               await stm.Connect();
             }
             catch (Exception e)
             {
@@ -128,28 +129,25 @@ namespace ABU2021_ControlAndDebug.Models
 #endif
                 throw;
             }
+            _comDevice = stm;
             _sendMsgTimer = new Timer(PeriodicSendMsg, null, 0, SendMsgPeriod);
-            IsConnected = true;
+            Device = Core.ControlType.ToDevice(stm.BoardType);
+            ConnectStatusChage();
         }
         public void Disconnect()
         {
-            if (!_isConnected) throw new InvalidOperationException("Non connected");
+            if (!IsConnected) return;// throw new InvalidOperationException("Non connected");
             _sendMsgTimer.Dispose();
-            if (IsConnectedSTM)
+
+            try
             {
-                try { _stm.Disconnect(); }
-                catch { throw; }
-                finally { IsConnected = false; }
-                return;
+                _comDevice.Disconnect();
             }
-            else if (IsConnectedROS)
+            finally
             {
-                try { _ros.Disconnect(); }
-                catch { throw; }
-                finally { IsConnected = false; }
-                return;
+                _comDevice = null;
+                ConnectStatusChage();
             }
-            throw new Exception("`IsConnected` is true, but not connect device");
         }
 
         public void SendMsg(Core.SendDataMsg msg)
@@ -158,15 +156,13 @@ namespace ABU2021_ControlAndDebug.Models
 
             try
             {
-                if (_stm.IsConnected) _stm.Send(msg);
-                else if (_ros.IsConnected)_ros.Send(msg);
+                _comDevice.SendMsgAsync(msg);
             }
             catch
             {
                 //Disconnect();
                 _log.WiteErrorMsg("切断されました");
-                _sendMsgTimer.Dispose();
-                IsConnected = false;
+                Disconnect();
             }
         }
         public async Task<Core.ReceiveDataMsg> ReadMsgAsync()
@@ -175,21 +171,12 @@ namespace ABU2021_ControlAndDebug.Models
 
             try
             {
-                if (_stm.IsConnected)
-                {
-                    return await _stm.ReadMsgAsync();
-                }
-                else //if (_ros.IsConnected)
-                {
-                    return await _ros.ReadMsgAsync();
-                }
-
+                return await _comDevice.ReadMsgAsync();
             }
             catch
             {
                 _log.WiteErrorMsg("切断されました");
-                _sendMsgTimer.Dispose();
-                IsConnected = false;
+                Disconnect();
                 throw;
             }
         }
@@ -199,25 +186,28 @@ namespace ABU2021_ControlAndDebug.Models
         {
             if (_joypad.IsEnabled)
             {
+                _log.WiteDebugMsg("send start joy");
                 try
                 {
-                    if (_stm.IsConnected)
-                    {
-                        _stm.Send(new Core.SendDataMsg(Core.SendDataMsg.HeaderType.JOY, _joypad.GetPad().JoyInfoEx));
-                    }
-                    else if (_ros.IsConnected)
-                    {
-                        _ros.Send(new Core.SendDataMsg(Core.SendDataMsg.HeaderType.JOY, _joypad.GetPad().JoyInfoEx));
-                    }
+                    Task.Run(async () =>{
+                        await _comDevice?.SendMsgAsync(new Core.SendDataMsg(Core.SendDataMsg.HeaderType.JOY, _joypad.GetPad().JoyInfoEx));
+                    });
                 }
                 catch
                 {
                     //Disconnect();
                     _log.WiteErrorMsg("切断されました");
-                    _sendMsgTimer.Dispose();
-                    IsConnected = false;
+                    Disconnect();
                 }
+                _log.WiteDebugMsg("sended joy");
             }
+        }
+        private void ConnectStatusChage()
+        {
+            RaisePropertyChanged("IsConnected");
+            RaisePropertyChanged("ConnectedDviseName");
+            RaisePropertyChanged("IsConnectedStm");
+            RaisePropertyChanged("IsConnectedRos");
         }
         #endregion
     }

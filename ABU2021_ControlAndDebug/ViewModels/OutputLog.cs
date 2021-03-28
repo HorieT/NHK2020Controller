@@ -18,17 +18,19 @@ namespace ABU2021_ControlAndDebug.ViewModels
 
 
         #region Command
-        private ICommand _logChanged;
+        private ICommand _log_TextChanged;
 
-        public ICommand LogChanged
+        public ICommand Log_TextChanged
         {
             get
             {
-                return _logChanged ??
-                    (_logChanged = CreateCommand(
-                        (ExecutedRoutedEventArgs args) =>
+                return _log_TextChanged ??
+                    (_log_TextChanged = CreateCommand(
+                        (TextChangedEventArgs e) =>
                         {
-                            Log.WiteDebugMsg(args.Command.ToString());
+                            var box = e.Source as TextBox;
+                            if (box == null) return;
+                            box.ScrollToEnd();
                         }));
             }
         }

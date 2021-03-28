@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Markup;
+using System.Xaml;
 
 namespace MVVMLib
 {
@@ -24,12 +25,22 @@ namespace MVVMLib
         /// イベント発生時に呼び出すコマンドのパスを取得または設定します。
         /// </summary>
         public PropertyPath Path { get; set; }
+        /// <summary>
+        /// イベントが固有のハンドラを持たずに生でEvent<T>実装されてた時の引数型指定
+        /// </summary>
+        public Type Arg { get; set; }
 
         private TargetObject _targetObject;
 
         public InvokeCommandExtension(PropertyPath bindingCommandPath)
         {
             this.Path = bindingCommandPath;
+        }
+
+        public InvokeCommandExtension(PropertyPath bindingCommandPath, Type arg)
+        {
+            this.Path = bindingCommandPath;
+            this.Arg = arg;
         }
 
 #pragma warning disable CA1062
@@ -41,37 +52,40 @@ namespace MVVMLib
             {
                 var ei = pvt.TargetProperty as EventInfo;
                 var mi = pvt.TargetProperty as MethodInfo;
-                var type = (ei != null) ? ei.EventHandlerType :
-                                          (mi != null) ? mi.GetParameters()[1].ParameterType :
-                                                         null;
+                var type = ei?.EventHandlerType ?? mi?.GetParameters()[1].ParameterType;
 
-                if (type != null)
+                var element = pvt.TargetObject as FrameworkElement;
+                var contentElement = pvt.TargetObject as FrameworkContentElement;
+                if (element != null)
                 {
-                    var element = pvt.TargetObject as FrameworkElement;
-                    var contentElement = pvt.TargetObject as FrameworkContentElement;
-                    if (element != null)
-                    {
-                        _targetObject = new TargetObject();
-                        this.SetBinding(element.DataContext);
-                        element.DataContextChanged += (s, e) => { this.SetBinding(e.NewValue); };
-                    }
-                    else if (contentElement != null)
-                    {
-                        _targetObject = new TargetObject();
-                        this.SetBinding(contentElement.DataContext);
-                        contentElement.DataContextChanged += (s, e) => { this.SetBinding(e.NewValue); };
-                    }
-                    else
-                    {
-                        return null;
-                    }
+                    _targetObject = new TargetObject();
+                    this.SetBinding(element.DataContext);
+                    element.DataContextChanged += (s, e) => { this.SetBinding(e.NewValue); };
+                }
+                else if (contentElement != null)
+                {
+                    _targetObject = new TargetObject();
+                    this.SetBinding(contentElement.DataContext);
+                    contentElement.DataContextChanged += (s, e) => { this.SetBinding(e.NewValue); };
+                }
+                else
+                {
+                    return null;
+                }
 
-                    // ここで、イベントハンドラを作成し、マークアップ拡張の結果として返す
-                    var nonGenericMethod = GetType().GetMethod("PrivateHandlerGeneric", BindingFlags.NonPublic | BindingFlags.Instance);
-                    var argType = type.GetMethod("Invoke").GetParameters()[1].ParameterType;
-                    var genericMethod = nonGenericMethod.MakeGenericMethod(argType);
+                // ここで、イベントハンドラを作成し、マークアップ拡張の結果として返す
+                var nonGenericMethod = GetType().GetMethod("PrivateHandlerGeneric", BindingFlags.NonPublic | BindingFlags.Instance);
+                var argType = type?.GetMethod("Invoke").GetParameters()[1].ParameterType ?? Arg;
+                var genericMethod = nonGenericMethod.MakeGenericMethod(argType);
 
+                if(type != null)
+                {
                     return Delegate.CreateDelegate(type, this, genericMethod);
+                }
+                else if(argType != null)
+                { 
+                    var genericType = typeof(EventHandler<>).MakeGenericType(argType);
+                    return Delegate.CreateDelegate(genericType, this, genericMethod);
                 }
             }
 
