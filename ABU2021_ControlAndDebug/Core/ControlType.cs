@@ -46,23 +46,5 @@ namespace ABU2021_ControlAndDebug.Core
             TR = 8080,
             DR = 8011
         }
-
-
-
-
-        /// <summary>
-        /// 送信ヘッダ型
-        /// 定義文字列はそのままROS通信に、数値はSTM通信に
-        /// TR,DR共用
-        /// </summary>
-        public enum SendHedder : byte
-        {
-            E_STOP = 1,
-            INJECT,
-            I_ANGLE,
-            I_LOAD,
-            COLLECT,
-            JOY = 0x80
-        }
     }
 }

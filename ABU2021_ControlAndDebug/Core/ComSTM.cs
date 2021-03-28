@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO.Ports;
 using System.Linq;
+using System.Management;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,7 +13,10 @@ namespace ABU2021_ControlAndDebug.Core
 {
     class ComSTM
     {
-        private InterfaceUSB _usb;
+        private static readonly int MaxQueueSize = 256;
+        private SerialPort _port;
+        private ConcurrentQueue<ReceiveDataMsg> _readMsgQueue = new ConcurrentQueue<ReceiveDataMsg>();
+        private List<byte> _readDataBuff = new List<byte>();
 
 
         #region Property
@@ -22,8 +28,6 @@ namespace ABU2021_ControlAndDebug.Core
 
         public ComSTM()
         {
-            _usb = new InterfaceUSB();
-            _usb.DataReceived += _usb_DataReceived;
         }
         ~ComSTM()
         {
@@ -33,9 +37,11 @@ namespace ABU2021_ControlAndDebug.Core
 
 
         #region Method
+        #region public
         public void Connect()
         {
-            var ports = Core.InterfaceUSB.GetComports();
+            if (IsConnected) throw new InvalidOperationException("Already connected");
+            var ports = GetComports();
             bool isFound = false;
 
 #if DEBUG
@@ -51,7 +57,7 @@ namespace ABU2021_ControlAndDebug.Core
             {
                 try
                 {
-                    _usb.DestinationSelection(Core.ControlType.STM_VID, (int)board, ports);
+                    DestinationSelection(ControlType.STM_VID, (int)board, ports);
                 }
                 catch (ArgumentException e)
                 {
@@ -74,24 +80,24 @@ namespace ABU2021_ControlAndDebug.Core
                 throw new InvalidOperationException("No valid STM device found");
             }
 
-            try
-            {
-                _usb.Connect();
-            }
-            catch (Exception e)
-            {
-                throw;
-            }
+
+            _port.DtrEnable = true;
+            _port.RtsEnable = true;
+            try { _port.Open(); }
+            catch { throw; }
             IsConnected = true;
         }
 
         public void Disconnect()
         {
+            _readDataBuff.Clear();
+            _readMsgQueue = new ConcurrentQueue<ReceiveDataMsg>(); 
+            if (!IsConnected) throw new InvalidOperationException("Not connected");
             try
             {
-                _usb.Disconnect();
-            }
-            catch 
+                _port.Close();
+            } 
+            catch
             {
                 throw;
             }
@@ -108,19 +114,12 @@ namespace ABU2021_ControlAndDebug.Core
         /// <typeparam name="T"></typeparam>
         /// <param name="header"></param>
         /// <param name="data"></param>
-        public void Send<T>(byte header, T data) where T : struct
+        public void Send(SendDataMsg msg)
         {
-            int size = Marshal.SizeOf(data);
-            IntPtr ptr = Marshal.AllocHGlobal(size);
-            Marshal.StructureToPtr(data, ptr, false);
-            byte[] bytes = new byte[size + 1];
-            Marshal.Copy(ptr, bytes, 1, size);
-            bytes[0] = header;
-
-            var sendData = COBS_Encode(bytes.ToList());
+            var sendData = COBS_Encode(msg.ConvByte());
             try
             {
-                _usb.Write(sendData, sendData.Length);
+                _port.Write(sendData, 0, sendData.Length);
             }
             catch
             {
@@ -129,95 +128,115 @@ namespace ABU2021_ControlAndDebug.Core
             }
         }
         /// <summary>
-        /// 送信
+        /// 受信メッセージの取り出し
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="header"></param>
-        /// <param name="data"></param>
-        /// <param name="type"
-        public void Send(byte header, object data, Type type)
+        /// <returns></returns>
+        public async Task<ReceiveDataMsg> ReadMsgAsync()
         {
-            if (!type.IsValueType) throw new ArgumentException("Type must be a value type ", nameof(type));
-            int size = Marshal.SizeOf(type);
-            IntPtr ptr = Marshal.AllocHGlobal(size);
-            Marshal.StructureToPtr(data, ptr, false);
-            byte[] bytes = new byte[size + 1];
-            Marshal.Copy(ptr, bytes, 1, size);
-            bytes[0] = header;
-
-            var sendData = COBS_Encode(bytes.ToList());
-            try
+            var task = Task<ReceiveDataMsg>.Run(() =>
             {
-                _usb.Write(sendData, sendData.Length);
-            }
-            catch
-            {
-                Disconnect();
-                throw new InvalidOperationException("Connecton error");
-            }
-        }
-        /// <summary>
-        /// 送信のジョイパッド特殊化
-        /// </summary>
-        /// <param name="header">ヘッダは外部定義</param>
-        /// <param name="joy"></param>
-        public void Send(byte header, Joypad.JOYINFOEX joy)
-        {
-            if (!IsConnected) throw new InvalidOperationException("Not connected");
-            List<byte> packet = new List<byte>();
-
-            //header
-            packet.Add(0x80);
-            packet.AddRange(BitConverter.GetBytes(joy.dwButtons));
-            packet.AddRange(BitConverter.GetBytes(joy.dwPOV));
-            packet.Add((byte)(((int)joy.dwXpos - ushort.MaxValue / 2 - 1) / 256));//X軸
-            packet.Add((byte)(((int)joy.dwYpos - ushort.MaxValue / 2 - 1) / 256));//Y軸
-            packet.Add((byte)(((int)joy.dwVpos - ushort.MaxValue / 2 - 1) / 256));//X回転
-            packet.Add((byte)(((int)joy.dwRpos - ushort.MaxValue / 2 - 1) / 256));//Y回転
-            //checksum
-            packet.Add(packet.Aggregate((sum, item) => (byte)(sum + item)));//byte列にはSum()が使えない
-
-            var padData = COBS_Encode(packet);
-            try
-            {
-                _usb.Write(padData, padData.Length);
-            }
-            catch
-            {
-                Disconnect();
-                throw new InvalidOperationException("Connecton error");
-            }
-        }
-
-
-        public async Task<string> ReadSentenceAsync()
-        {
-            var task = Task<string>.Run(() =>
-            {
+                ReceiveDataMsg msg;
                 while (true)
                 {
-                    try
+                    if (!_readMsgQueue.IsEmpty)
                     {
-                        return _usb.ReadTo("\0");
-                    }
-                    catch (TimeoutException e)
-                    {
-                        continue;
-                    }
-                    catch
-                    {
-                        Disconnect();
-                        throw new InvalidOperationException("Connecton error");
+                        if(_readMsgQueue.TryDequeue(out msg))
+                            return msg;
                     }
                 }
             });
 
             return await task;
         }
+        #endregion
 
-        private void _usb_DataReceived(object sender)
+        #region private
+        /// <summary>
+        /// 接続のあるCOMポートの取得
+        /// </summary>
+        /// <returns></returns>
+        private static IReadOnlyList<Comport> GetComports()
         {
-            throw new NotImplementedException();
+            var list = new List<Comport>();
+            var management = new ManagementClass("Win32_PnPEntity");
+
+            foreach (var m in management.GetInstances()) using (m)
+                {
+                    list.Add(new Comport()
+                    {
+                        DeviceID = (string)m.GetPropertyValue("DeviceID"),
+                        Description = (string)m.GetPropertyValue("Caption"),
+                        PNPDeviceID = (string)m.GetPropertyValue("PNPDeviceID")
+                    });
+                }
+
+            return list.AsReadOnly();
+        }
+        /// <summary>
+        /// COMポートの選択
+        /// </summary>
+        /// <param name="vid"></param>
+        /// <param name="pid"></param>
+        private void DestinationSelection(int vid, int pid)
+        {
+            try { DestinationSelection(vid, pid, GetComports()); }
+            catch { throw; }
+        }
+        /// <summary>
+         /// COMポートの選択
+         /// </summary>
+         /// <param name="vid"></param>
+         /// <param name="pid"></param>
+        private void DestinationSelection(int vid, int pid, IReadOnlyList<Comport> ports)
+        {
+            if (IsConnected) throw new InvalidOperationException("Already connected to USB port");
+            if (ports.Count(i => i.VID == vid) == 0) throw new ArgumentException("No matching port was found", nameof(vid));
+            var pnpPort = ports.FirstOrDefault(i => (i.VID == vid && i.PID == pid));
+            if (pnpPort == null) throw new ArgumentException("No matching port was found", nameof(pid));
+
+            _port = new SerialPort(pnpPort.PortName, 115200, Parity.None, 8, StopBits.One);
+        }
+        /// <summary>
+        /// 受信バイト読み
+        /// </summary>
+        /// <returns></returns>
+        private Task ReadData()
+        {
+            return Task.Run(() =>
+            {
+                int byteData;
+                while (true)
+                {
+                    try
+                    {
+                        byteData = _port.ReadByte();
+                    }
+                    catch (TimeoutException)
+                    {
+                        byteData = -1;
+                    }
+
+                    if (byteData != -1)
+                    {
+                        _readDataBuff.Add((byte)byteData);
+                        if(byteData == 0)//終端
+                        {
+                            if (_readDataBuff.Count() > 2)
+                            {
+                                try
+                                {
+                                    _readMsgQueue.Enqueue(new ReceiveDataMsg(COBS_Decode(_readDataBuff)));
+                                }
+                                catch
+                                {
+                                    //デコード失敗
+                                }
+                            }
+                            _readDataBuff.Clear();
+                        }
+                    }
+                }
+            });
         }
         private byte[] COBS_Encode(IReadOnlyList<byte> inData)
         {
@@ -259,6 +278,7 @@ namespace ABU2021_ControlAndDebug.Core
 
             return decodeData.ToArray();
         }
+        #endregion
         #endregion
     }
 }

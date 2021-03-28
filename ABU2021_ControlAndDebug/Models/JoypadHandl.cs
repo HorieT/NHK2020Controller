@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using JoypadControl;
 using MVVMLib;
@@ -13,12 +14,15 @@ namespace ABU2021_ControlAndDebug.Models
     /// padナンバーは0選択固定
     /// GPD(Xboxコン)とDualshockのキー配置は全く違う　うんち！！！！！！！！！！
     /// 当面はGPDのみで考える
+    /// 
+    ///  JoypadControlがY回転を読んでくれないorz
     /// </summary>
     class JoypadHandl : NotifyPropertyChanged
     {
         private static readonly uint PAD_NUM = 0;
         private OutputLog _log;
         private Xbox360_JoyPad _pad;
+        private Timer _checkPad;
 
 
         #region Singleton instance
@@ -35,6 +39,8 @@ namespace ABU2021_ControlAndDebug.Models
             _log = OutputLog.GetInstance;
             _pad = new Xbox360_JoyPad();
             if (IsExisted == false) _log.WiteErrorMsg("ジョイパッドがありません");
+            else IsEnabled = true;
+            _checkPad = new Timer(CheckPad, null, 0, 5000);//周期的にパッドの接続を確認
         }
         #endregion
 
@@ -42,6 +48,7 @@ namespace ABU2021_ControlAndDebug.Models
         #region Property
         private bool _isExisted;
         private bool _isEnabled;
+        private bool _isDebug;
 
         public bool IsExisted
         {
@@ -69,6 +76,11 @@ namespace ABU2021_ControlAndDebug.Models
                     SetProperty(ref _isEnabled, value); 
             }
         }
+        public bool IsDebug
+        {
+            get => _isDebug;
+            set { SetProperty(ref _isDebug, value); }
+        }
         #endregion
 
 
@@ -89,6 +101,25 @@ namespace ABU2021_ControlAndDebug.Models
             }
 
             return _pad;
+        }
+
+
+        private void CheckPad(object sender)
+        {
+            if (_isExisted && IsDebug)
+            {
+                _log.WiteDebugMsg(" Button:" + GetPad().JoyInfoEx.dwButtons.ToString("X8"));
+                _log.WiteDebugMsg(" X pos:" + GetPad().JoyInfoEx.dwXpos.ToString());
+                _log.WiteDebugMsg(" Y pos:" + GetPad().JoyInfoEx.dwYpos.ToString());
+                _log.WiteDebugMsg(" Z pos:" + GetPad().JoyInfoEx.dwZpos.ToString());
+                _log.WiteDebugMsg(" X rot:" + GetPad().JoyInfoEx.dwXrot.ToString());
+                _log.WiteDebugMsg(" Y rot:" + GetPad().JoyInfoEx.dwYrot.ToString());
+                _log.WiteDebugMsg(" Z rot:" + GetPad().JoyInfoEx.dwZrot.ToString());
+                _log.WiteDebugMsg(" Flag:" + GetPad().JoyInfoEx.dwFlags.ToString());
+                _log.WiteDebugMsg(" Reserrved1:" + GetPad().JoyInfoEx.dwReserved1.ToString());
+                _log.WiteDebugMsg(" Reserrved2:" + GetPad().JoyInfoEx.dwReserved2.ToString());
+                _log.WiteLine("");
+            }
         }
     }
 }

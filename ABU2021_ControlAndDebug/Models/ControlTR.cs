@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using MVVMLib;
 
 namespace ABU2021_ControlAndDebug.Models
@@ -17,29 +18,6 @@ namespace ABU2021_ControlAndDebug.Models
         public static readonly double INJECT_SPEED_MAX = 7.5;//m/s
         public static readonly double INJECT_ANGLE_MAX = 47.0;//deg
         public static readonly double INJECT_ANGLE_MIN = 27.0;//deg
-
-        /// <summary>
-        /// 通信インデックス定義の為にプロパティと同名の列挙型を定義しコンバータとして使う
-        /// </summary>
-        public enum SendDataType : int
-        {
-            IsEmergencyStopped = 1,
-            InjectSpeedTag,
-            InjectAngleTag,
-            IsClickedInjectButton,
-            LoaderPoint,
-            IsOpenedRecovery,
-        }
-        public enum ReceiveDataType : int
-        {
-            IsEmergencyStopped = 1,
-            InjectAngleNow,
-            IsMoveEndInjectAngle,
-            IsMoveEndInjecInit,
-            IsMoveEndInject,
-            IsMoveEndRecovery,
-            IsMoveEndLoader,
-        }
 
 
         private OutputLog _log;
@@ -58,7 +36,10 @@ namespace ABU2021_ControlAndDebug.Models
         {
             _log = OutputLog.GetInstance;
             _communicator = Communicator.GetInstance;
+
+            _communicator.PropertyChanged += _communicator_PropertyChanged;
         }
+
         #endregion
 
 
@@ -74,14 +55,16 @@ namespace ABU2021_ControlAndDebug.Models
         private float _injectAngleTag;
         private bool _isClickedInjectButton;
         private byte _loaderPoint;
-        private bool _isOpenedRecovery;
         // OneWay (input from device only / output to VM) : ReceiveDataType
+        private bool _isOpenedRecovery;
         private float _injectAngleNow;
         private bool _isMoveEndInjectAngle;
         private bool _isMoveEndInjecInit;
         private bool _isMoveEndInject;
         private bool _isMoveEndRecovery;
         private bool _isMoveEndLoader;
+        private Vector _position;
+        private float _positionRot;
 
 
         #endregion
@@ -129,41 +112,54 @@ namespace ABU2021_ControlAndDebug.Models
             get => _loaderPoint;
             set { SetProperty(ref _loaderPoint, value); }
         }
+        #region Get only
         public bool IsOpenedRecovery
         {
             get => _isOpenedRecovery;
-            set { SetProperty(ref _isOpenedRecovery, value); }
+            private set { SetProperty(ref _isOpenedRecovery, value); }
         }
         public float InjectAngleNow
         {
             get => _injectAngleNow;
-            set { SetProperty(ref _injectAngleNow, value); }
+            private set { SetProperty(ref _injectAngleNow, value); }
         }
         public bool IsMoveEndInjectAngle
         {
             get => _isMoveEndInjectAngle;
-            set { SetProperty(ref _isMoveEndInjectAngle, value); }
+            private set { SetProperty(ref _isMoveEndInjectAngle, value); }
         }
         public bool IsMoveEndInjecInit
         {
             get => _isMoveEndInjecInit;
-            set { SetProperty(ref _isMoveEndInjecInit, value); }
+            private set { SetProperty(ref _isMoveEndInjecInit, value); }
         }
         public bool IsMoveEndInject
         {
             get => _isMoveEndInject;
-            set { SetProperty(ref _isMoveEndInject, value); }
+            private set { SetProperty(ref _isMoveEndInject, value); }
         }
         public bool IsMoveEndRecovery
         {
             get => _isMoveEndRecovery;
-            set { SetProperty(ref _isMoveEndRecovery, value); }
+            private set { SetProperty(ref _isMoveEndRecovery, value); }
         }
         public bool IsMoveEndLoader
         {
             get => _isMoveEndLoader;
-            set { SetProperty(ref _isMoveEndLoader, value); }
+            private set { SetProperty(ref _isMoveEndLoader, value); }
         }
+        public Vector Positon
+        {
+            get => _position;
+            private set { SetProperty(ref _position, value); }
+        }
+        public float PositonRot
+        {
+            get => _positionRot;
+            private set { SetProperty(ref _positionRot, value); }
+        }
+        #endregion
+
 
 
         /// <summary>
@@ -218,6 +214,15 @@ namespace ABU2021_ControlAndDebug.Models
             double tmp1 = Math.Pow(InjectSpeedTag * Math.Cos(InjectAngleTag*Math.PI/180), 2);
             double tmp2 = Math.Tan(InjectAngleTag * Math.PI / 180);
             return -tmp1 * (-tmp2 - Math.Sqrt(Math.Pow(tmp2, 2) + 2 * 9.8 * (InjectHeight - height) / tmp1)) / 9.8;
+        }
+
+
+        private void _communicator_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if(e.PropertyName == "IsConnected")
+            {
+
+            }
         }
         #endregion
     }

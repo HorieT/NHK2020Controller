@@ -1,7 +1,9 @@
 ﻿using JoypadControl;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,8 +11,11 @@ namespace ABU2021_ControlAndDebug.Core
 {
     class ComROS
     {
-        private InterfaceWifi _wifi;
+        //private InterfaceWifi _wifi;
         //private InterfaceBT _bluetooth;
+        private NetworkStream _wifiStream;
+        private StreamReader _wifiReader;//ネーミングセンス皆無
+        private StreamWriter _wifiWriter;//ネーミングセンス皆無
 
 
         #region Property
@@ -22,11 +27,10 @@ namespace ABU2021_ControlAndDebug.Core
 
         public ComROS()
         {
-            _wifi = new InterfaceWifi();
         }
         ~ComROS()
         {
-
+            if (IsConnected) Disconnect();
         }
 
 
@@ -37,27 +41,31 @@ namespace ABU2021_ControlAndDebug.Core
         #region Method
         public Task Connect(ControlType.TcpPort port)
         {
+            if (IsConnected) throw new InvalidOperationException("Already connected to TCP/IP on Wifi");
+
             Port = port;
-            _wifi.Port = (int)Port;
-            return Task.Run(async () =>
+            return Task.Run(() =>
             {
                 try
                 {
-                    await _wifi.Connect();
+                    var _client = new System.Net.Sockets.TcpClient(ControlType.TCP_IP_ADDRESS, (int)Port);
+
+                    _wifiStream = _client.GetStream();
+                    _wifiReader = new StreamReader(_wifiStream, Encoding.UTF8);
+                    _wifiWriter = new StreamWriter(_wifiStream, Encoding.UTF8);
                 }
-                catch (Exception e)
-                {
-                    throw;
-                }
+                catch { throw; }
                 IsConnected = true;
             });
         }
 
         public void Disconnect()
         {
+            if (!IsConnected) throw new InvalidOperationException("Not connected to TCP/IP on Wifi");
             try
             {
-                _wifi.Disconnect();
+                //_wifiReader.Close();
+                _wifiStream.Close();
             }
             catch
             {
@@ -76,59 +84,12 @@ namespace ABU2021_ControlAndDebug.Core
         /// <typeparam name="T"></typeparam>
         /// <param name="header"></param>
         /// <param name="data"></param>
-        public void Send(string header, string data)
+        public void Send(SendDataMsg msg)
         {
             if (!IsConnected) throw new InvalidOperationException("Not connected");
             try
             {
-                _wifi.WriteLine(header + ":" + data);
-            }
-            catch
-            {
-                Disconnect();
-                throw new InvalidOperationException("Connecton error");
-            }
-        }
-        /// <summary>
-        /// 送信のジョイパッド特殊化
-        /// </summary>
-        /// <param name="header">ヘッダは外部定義</param>
-        /// <param name="joy"></param>
-        public void Send(string header, Joypad.JOYINFOEX joy)
-        {
-            if (!IsConnected) throw new InvalidOperationException("Not connected");
-
-            string data = "";
-            uint button = 0;
-            button |=
-                (uint)(joy.dwPOV == 0 ? 0x0010 : 0x0000) |
-                (uint)(joy.dwPOV == 4500 ? 0x0030 : 0x0000) |
-                (uint)(joy.dwPOV == 9000 ? 0x0020 : 0x0000) |
-                (uint)(joy.dwPOV == 13500 ? 0x0060 : 0x0000) |
-                (uint)(joy.dwPOV == 18000 ? 0x0040 : 0x0000) |
-                (uint)(joy.dwPOV == 22500 ? 0x00C0 : 0x0000) |
-                (uint)(joy.dwPOV == 27000 ? 0x0080 : 0x0000) |
-                (uint)(joy.dwPOV == 31500 ? 0x0090 : 0x0000) |
-                ((joy.dwButtons & 0x0080) >> 7) |   //select
-                ((joy.dwButtons & 0x0300) >> 7) |   //L3,R3
-                ((joy.dwButtons & 0x0040) >> 3) |   //start
-                ((joy.dwButtons & 0x0C00) >> 2) |   //L2,R2
-                ((joy.dwButtons & 0x0030) << 6) |   //L1,R1
-                ((joy.dwButtons & 0x0008) << 9) |   //Y(三角)
-                ((joy.dwButtons & 0x0002) << 12) |  //B(丸)
-                ((joy.dwButtons & 0x0001) << 14) |  //A(バツ)
-                ((joy.dwButtons & 0x0004) << 13) |  //X(四角)
-                ((joy.dwButtons & 0x1000) << 4) ;   //HOME
-
-            data += button.ToString("X8");
-            data += "," + (((float)joy.dwXpos - ushort.MaxValue / 2 - 1) / ushort.MaxValue * 2).ToString("F3");
-            data += "," + (((float)joy.dwYpos - ushort.MaxValue / 2 - 1) / ushort.MaxValue * 2).ToString("F3");
-            data += "," + (((float)joy.dwVpos - ushort.MaxValue / 2 - 1) / ushort.MaxValue * 2).ToString("F3");
-            data += "," + (((float)joy.dwRpos - ushort.MaxValue / 2 - 1) / ushort.MaxValue * 2).ToString("F3");
-
-            try
-            {
-                _wifi.WriteLine(header + ":" + data);
+                _wifiWriter.WriteLine(msg.ConvString());
             }
             catch
             {
@@ -138,9 +99,21 @@ namespace ABU2021_ControlAndDebug.Core
         }
 
 
-        async Task<string> ReadSentenceAsync()
+        public async Task<ReceiveDataMsg> ReadMsgAsync()
         {
-            return  await _wifi.ReadLineAsync();
+            while (true)
+            {
+                var data = await _wifiReader.ReadLineAsync();
+
+                try
+                {
+                    return new ReceiveDataMsg(data);
+                }
+                catch
+                {
+                    continue;
+                }
+            }
         }
         #endregion
     }

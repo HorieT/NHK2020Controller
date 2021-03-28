@@ -6,241 +6,340 @@
         xmlns:local="clr-namespace:ABU2021_ControlAndDebug"
         xmlns:vmodel="clr-namespace:ABU2021_ControlAndDebug.ViewModels"
         xmlns:mvvm="clr-namespace:MVVMLib;assembly=MVVMLib"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:input="clr-namespace:System.Windows.Input;assembly=System"
+        xmlns:input_t="clr-namespace:System.Windows.Input;assembly=PresentationCore"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="5*"/>
-            <RowDefinition Height="3*"/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*"/>
-            <ColumnDefinition Width="1*"/>
-        </Grid.ColumnDefinitions>
+        WindowStyle="None"
+        WindowState="Maximized"
+        Topmost="True"
+        Title="MainWindow">
+    <Viewbox>
+        <Grid x:Name="MainGrid" Height="800" Width="1000">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="5*"/>
+                <RowDefinition Height="2*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
 
 
-        <Menu  Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
-            <Menu.DataContext>
-                <vmodel:MenuBar/>
-            </Menu.DataContext>
-            <Menu.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <DockPanel />
-                </ItemsPanelTemplate>
-            </Menu.ItemsPanel>
-            <MenuItem Header="ファイル(_F)" DockPanel.Dock="Left" IsEnabled="False" Command="{Binding FileClick}">
-
-            </MenuItem>
-            <MenuItem Header="設定(_E)" DockPanel.Dock="Left" IsEnabled="False">
-            </MenuItem>
-            <MenuItem Header="表示(_V)" DockPanel.Dock="Left" IsEnabled="False">
-                <MenuItem Header="ジョイパッド入力" IsEnabled="{Binding IsCheckedJoypad}"/>
-            </MenuItem>
-            <MenuItem Header="接続(_C)" DockPanel.Dock="Left">
-                <MenuItem Header="切断" IsEnabled="{Binding IsEnableDissconnect}" Command="{Binding DiscinnectClick}"/>
-                <Separator/>
-                <MenuItem Header="TR-ROS(Wifi)" IsCheckable="True" IsEnabled="{Binding IsEnableConnect}" IsChecked="{Binding IsCheckedROS_Wifi}" Command="{Binding ConnectTR_ROS_WifiClick}"/>
-                <MenuItem Header="DR-ROS(Wifi)" IsCheckable="True" IsEnabled="False" IsChecked="{Binding IsCheckedROS_Wifi}" Command="{Binding ConnectDR_ROS_WifiClick}"/>
-                <MenuItem Header="STM(USB)" IsCheckable="True" IsEnabled="{Binding IsEnableConnect}" IsChecked="{Binding IsCheckedSTM_USB}" Command="{Binding ConnectSTM_USBClick}"/>
-                <Separator/>
-                <MenuItem Header="ジョイパッド" IsCheckable="True" IsChecked="{Binding IsCheckedJoypad}" Command="{Binding ActiveJoypadClick}"/>
-            </MenuItem>
-
-            <MenuItem Header="{Binding ConnectedText}" DockPanel.Dock="Right" HorizontalAlignment="Right" Focusable="False" IsManipulationEnabled="False" IsEnabled="False"/>
-            <MenuItem Header="{Binding ConnectedJoypadText}" DockPanel.Dock="Right" HorizontalAlignment="Right" Focusable="False" IsManipulationEnabled="False" IsEnabled="False"/>
-        </Menu>
-
-
-
-
-        <TabControl Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" Margin="5, 0, 0, 0">
-            <TabItem Header="無効">
-                
-            </TabItem>
-            <TabItem Header="TR">
-                <TabItem.DataContext>
-                    <vmodel:ControlTabTR/>
-                </TabItem.DataContext>
-                <DockPanel>
-                    <GroupBox DockPanel.Dock="Top" Header="ステータス">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="1*"/>
-                                <ColumnDefinition Width="2*"/>
-                                <ColumnDefinition Width="2*"/>
-                                <ColumnDefinition Width="1*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="回収機構展開"
-                                       Grid.Row="0"
-                                       Grid.Column="0"
-                                       Grid.ColumnSpan="2"
-                                       Margin="2"
-                                       HorizontalAlignment="Right"
-                                       VerticalAlignment="Center"/>
-                            <CheckBox Grid.Row="0"
-                                      Grid.Column="2"
-                                      HorizontalAlignment="Center"
-                                      VerticalAlignment="Center"
-                                      IsChecked="{Binding TR.IsOpenedRecovery}"
-                                      IsEnabled="False"/>
-
-                            <TextBlock Text="射出角度"
-                                       Grid.Row="1"
-                                       Grid.Column="0"
-                                       Grid.ColumnSpan="2"
-                                       Margin="2"
-                                       VerticalAlignment="Center"
-                                       HorizontalAlignment="Right"/>
-                            <TextBox Grid.Row="1"
-                                     Grid.Column="2"
-                                     Margin="2"
-                                     IsReadOnly="True"
-                                     TextAlignment="Right"
-                                     Text="{Binding InjectAngleNow}"/>
-                            <TextBlock Text="deg"
-                                   Grid.Row="1"
-                                   Grid.Column="3"
-                                   Margin="2"/>
-                        </Grid>
-                    </GroupBox>
+            <Menu  Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
+                <Menu.DataContext>
+                    <vmodel:MenuBar/>
+                </Menu.DataContext>
+                <Menu.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <DockPanel />
+                    </ItemsPanelTemplate>
+                </Menu.ItemsPanel>
+                <MenuItem Header="ファイル(_F)" DockPanel.Dock="Left" Command="{Binding FileClick}">
+                    <MenuItem Header="終了(_X)" Command="{Binding ShutdownClick}"/>
+                </MenuItem>
+                <MenuItem Header="設定(_E)" DockPanel.Dock="Left" IsEnabled="False">
                     
-                    
-                    <GroupBox DockPanel.Dock="Bottom" Header="コントロール">
-                        <DockPanel>
-                            <!--ボタン入力類-->
-                            <Grid DockPanel.Dock="Bottom" Margin="5">
+                </MenuItem>
+                <MenuItem Header="表示(_V)" DockPanel.Dock="Left" IsEnabled="False">
+                    <MenuItem Header="ジョイパッド入力" IsEnabled="{Binding IsCheckedJoypad}"/>
+                </MenuItem>
+                <MenuItem Header="接続(_C)" DockPanel.Dock="Left">
+                    <MenuItem Header="切断" IsEnabled="{Binding IsEnableDissconnect}" Command="{Binding DiscinnectClick}"/>
+                    <Separator/>
+                    <MenuItem Header="TR-ROS(Wifi)" IsCheckable="True" IsEnabled="{Binding IsEnableConnect}" IsChecked="{Binding IsCheckedROS_Wifi}" Command="{Binding ConnectTR_ROS_WifiClick}"/>
+                    <MenuItem Header="DR-ROS(Wifi)" IsCheckable="True" IsEnabled="False" IsChecked="{Binding IsCheckedROS_Wifi}" Command="{Binding ConnectDR_ROS_WifiClick}"/>
+                    <MenuItem Header="STM(USB)" IsCheckable="True" IsEnabled="{Binding IsEnableConnect}" IsChecked="{Binding IsCheckedSTM_USB}" Command="{Binding ConnectSTM_USBClick}"/>
+                    <Separator/>
+                    <MenuItem Header="ジョイパッド" IsCheckable="True" IsChecked="{Binding IsCheckedJoypad}" Command="{Binding ActiveJoypadClick}"/>
+                </MenuItem>
+
+                <MenuItem Header="{Binding ConnectedText}" DockPanel.Dock="Right" HorizontalAlignment="Right" Focusable="False" IsManipulationEnabled="False" IsEnabled="False"/>
+                <MenuItem Header="{Binding ConnectedJoypadText}" DockPanel.Dock="Right" HorizontalAlignment="Right" Focusable="False" IsManipulationEnabled="False" IsEnabled="False"/>
+            </Menu>
+
+
+            <TabControl Grid.Row="1" Grid.Column="0">
+                <TabItem Header="マップ">
+                    <ScrollViewer HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" 
+                                  IsManipulationEnabled="True"
+                                  PanningMode="None"
+                                  PreviewMouseWheel="{mvvm:InvokeCommand ScrollViewer_PreviewMouseWheel}" 
+                                  MouseMove="{mvvm:InvokeCommand ScrollViewer_MouseMove}"
+                                  MouseDown="{mvvm:InvokeCommand ScrollViewer_MouseDown}" 
+                                  MouseUp="{mvvm:InvokeCommand ScrollViewer_MouseUp}"
+                                  ManipulationDelta="{mvvm:InvokeCommand ScrollViewer_ManipulationDelta, Arg={x:Type input_t:ManipulationDeltaEventArgs}}">
+                        <ScrollViewer.DataContext>
+                            <vmodel:MapControl/>
+                        </ScrollViewer.DataContext>
+                        <ItemsControl>
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <Canvas Height="{Binding MapHeight}" 
+                                            Width="{Binding MapWidth}" 
+                                            ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                        <Canvas.Background>
+                                            <ImageBrush ImageSource="{Binding MapProperty.MapPictureSoruce, Mode=OneTime}" Stretch="Fill"/>
+                                        </Canvas.Background>
+                                    </Canvas>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <Image Source="{Binding MapProperty.Table2PictureSoruce, Mode=OneTime}"
+                                   Height="{Binding TableHeight}"
+                                   Width="{Binding TableWidth}">
+                                <Image.RenderTransform>
+                                    <TransformGroup>
+                                        <TranslateTransform X="{Binding Tabele2aOffset.X, Mode=OneTime}"
+                                                            Y="{Binding Tabele2aOffset.Y, Mode=OneTime}"/>
+                                        <RotateTransform Angle="{Binding MapProperty.Table2aRot, Mode=OneWay}"
+                                                         CenterX="{Binding Tabele2aCenter.X, Mode=OneTime}"
+                                                         CenterY="{Binding Tabele2aCenter.Y, Mode=OneTime}"/>
+                                    </TransformGroup>
+                                </Image.RenderTransform>
+                            </Image>
+                            <Image Source="{Binding MapProperty.Table2PictureSoruce, Mode=OneTime}"
+                                   Height="{Binding TableHeight}"
+                                   Width="{Binding TableWidth}">
+                                <Image.RenderTransform>
+                                    <TransformGroup>
+                                        <TranslateTransform X="{Binding Tabele2bOffset.X, Mode=OneTime}"
+                                                            Y="{Binding Tabele2bOffset.Y, Mode=OneTime}"/>
+                                        <RotateTransform Angle="{Binding MapProperty.Table2bRot, Mode=OneWay}"
+                                                         CenterX="{Binding Tabele2bCenter.X, Mode=OneTime}"
+                                                         CenterY="{Binding Tabele2bCenter.Y, Mode=OneTime}"/>
+                                    </TransformGroup>
+                                </Image.RenderTransform>
+                            </Image>
+                            <Image Source="{Binding MapProperty.Table3PictureSoruce, Mode=OneTime}"
+                                   Height="{Binding TableHeight}"
+                                   Width="{Binding TableWidth}">
+                                <Image.RenderTransform>
+                                    <TransformGroup>
+                                        <TranslateTransform X="{Binding Tabele3Offset.X, Mode=OneTime}"
+                                                            Y="{Binding Tabele3Offset.Y, Mode=OneTime}"/>
+                                        <RotateTransform Angle="{Binding MapProperty.Table3Rot, Mode=OneWay}"
+                                                         CenterX="{Binding Tabele3Center.X, Mode=OneTime}"
+                                                         CenterY="{Binding Tabele3Center.Y, Mode=OneTime}"/>
+                                    </TransformGroup>
+                                </Image.RenderTransform>
+                            </Image>
+
+
+                            <ItemsControl.Resources>
+                            </ItemsControl.Resources>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
+
+
+            <TabControl Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" Margin="5, 0, 0, 0">
+                <TabItem Header="無効">
+
+                </TabItem>
+                <TabItem Header="TR">
+                    <TabItem.DataContext>
+                        <vmodel:ControlTabTR/>
+                    </TabItem.DataContext>
+                    <DockPanel>
+                        <GroupBox DockPanel.Dock="Top" Header="ステータス">
+                            <Grid>
                                 <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition Width="2*"/>
                                     <ColumnDefinition Width="1*"/>
                                 </Grid.ColumnDefinitions>
-                                <Button Content="発射"
+                                <TextBlock 
+                                    Text="回収機構展開"
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    Margin="2"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"/>
+                                <CheckBox 
+                                    Grid.Row="0"
+                                    Grid.Column="2"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    IsChecked="{Binding TR.IsOpenedRecovery, Mode=OneWay}"
+                                    IsEnabled="False"/>
+
+                                <TextBlock 
+                                    Text="射出角度"
+                                    Grid.Row="1"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    Margin="2"
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Right"/>
+                                <TextBox 
+                                    Grid.Row="1"
+                                    Grid.Column="2"
+                                    Margin="2"
+                                    IsReadOnly="True"
+                                    TextAlignment="Right"
+                                    Text="{Binding InjectAngleNow}"/>
+                                <TextBlock 
+                                    Text="deg"
+                                    Grid.Row="1"
+                                    Grid.Column="3"
+                                    Margin="2"/>
+                            </Grid>
+                        </GroupBox>
+
+
+                        <GroupBox DockPanel.Dock="Bottom" Header="コントロール">
+                            <DockPanel>
+                                <!--ボタン入力類-->
+                                <Grid DockPanel.Dock="Bottom" Margin="5">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="1*"/>
+                                        <ColumnDefinition Width="1*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button 
+                                        Content="発射"
                                         Grid.Row="0"
                                         Grid.Column="0"
                                         Margin="5"
                                         IsEnabled="{Binding TR.IsMoveEndInject}"/>
 
-                            </Grid>
+                                </Grid>
 
-                            <!--テキスト入力類-->
-                            <Grid DockPanel.Dock="Top" Margin="5">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="1*"/>
-                                    <ColumnDefinition Width="2*"/>
-                                    <ColumnDefinition Width="2*"/>
-                                    <ColumnDefinition Width="1*"/>
-                                </Grid.ColumnDefinitions>
-
-
-                                <TextBlock Text="射出角度"
-                                           Grid.Row="0"
-                                           Grid.Column="0"
-                                           Grid.ColumnSpan="2"
-                                           Margin="2"
-                                           VerticalAlignment="Center"
-                                           HorizontalAlignment="Right"/>
-                                <TextBox Grid.Row="0"
-                                         Grid.Column="2"
-                                         Margin="2"
-                                         TextAlignment="Right"
-                                         Text="{Binding InjectAngle}"
-                                         IsEnabled="{Binding TR.IsMoveEndInjectAngle}"
-                                         CommandManager.PreviewExecuted="{mvvm:InvokeCommand NoPasteTextBox_PreviewExecuted}"
-                                         PreviewTextInput="{mvvm:InvokeCommand AngleTextBox_PreviewTextInput}"
-                                         LostFocus="{mvvm:InvokeCommand AngleTextBox_LostFocus}"/>
-                                <TextBlock Text="deg"
-                                           Grid.Row="0"
-                                           Grid.Column="3"
-                                           Margin="2"/>
-                                
-                                <TextBlock Text="射出速度"
-                                           Grid.Row="1"
-                                           Grid.Column="0"
-                                           Grid.ColumnSpan="2"
-                                           Margin="1"
-                                           VerticalAlignment="Center"
-                                           HorizontalAlignment="Right"/>
-                                <TextBox Grid.Row="1"
-                                         Grid.Column="2"
-                                         Margin="2"
-                                         TextAlignment="Right"
-                                         Text="{Binding InjectSpeed}"
-                                         CommandManager.PreviewExecuted="{mvvm:InvokeCommand NoPasteTextBox_PreviewExecuted}"
-                                         PreviewTextInput="{mvvm:InvokeCommand InjectTextBox_PreviewTextInput}"
-                                         LostFocus="{mvvm:InvokeCommand InjectTextBox_LostFocus}"/>
-                                <TextBlock Text="m/s"
-                                           Grid.Row="1"
-                                           Grid.Column="3"
-                                           Margin="2"/>
-                                
-                                <TextBlock Text="着弾予測(床面)"
-                                           Grid.Row="2"
-                                           Grid.Column="0"
-                                           Grid.ColumnSpan="2"
-                                           Margin="1"
-                                           VerticalAlignment="Center"
-                                           HorizontalAlignment="Right"/>
-                                <TextBox Grid.Row="2"
-                                         Grid.Column="2"
-                                         Margin="2"
-                                         TextAlignment="Right"
-                                         IsReadOnly="True"
-                                         Text="{Binding FallPrediction}"/>
-                                <TextBlock Text="m"
-                                           Grid.Row="2"
-                                           Grid.Column="3"
-                                           Margin="2"/>
+                                <!--テキスト入力類-->
+                                <Grid DockPanel.Dock="Top" Margin="5">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="1*"/>
+                                        <ColumnDefinition Width="2*"/>
+                                        <ColumnDefinition Width="2*"/>
+                                        <ColumnDefinition Width="1*"/>
+                                    </Grid.ColumnDefinitions>
 
 
-                            </Grid>
-                        </DockPanel>
-                    </GroupBox>                  
-                    
-                </DockPanel>
-            </TabItem>
-            <TabItem Header="DR" IsEnabled="False">
-                
-            </TabItem>
-        </TabControl>
+                                    <TextBlock 
+                                        Text="射出角度"
+                                        Grid.Row="0"
+                                        Grid.Column="0"
+                                        Grid.ColumnSpan="2"
+                                        Margin="2"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Right"/>
+                                    <TextBox 
+                                        Grid.Row="0"
+                                        Grid.Column="2"
+                                        Margin="2"
+                                        TextAlignment="Right"
+                                        Text="{Binding InjectAngle}"
+                                        IsEnabled="{Binding TR.IsMoveEndInjectAngle}"
+                                        CommandManager.PreviewExecuted="{mvvm:InvokeCommand NoPasteTextBox_PreviewExecuted}"
+                                        PreviewTextInput="{mvvm:InvokeCommand AngleTextBox_PreviewTextInput}"
+                                        LostFocus="{mvvm:InvokeCommand AngleTextBox_LostFocus}"/>
+                                    <TextBlock 
+                                        Text="deg"
+                                        Grid.Row="0"
+                                        Grid.Column="3"
+                                        Margin="2"/>
+                                    
+                                    <TextBlock 
+                                        Text="射出速度"
+                                        Grid.Row="1"
+                                        Grid.Column="0"
+                                        Grid.ColumnSpan="2"
+                                        Margin="1"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Right"/>
+                                    <TextBox 
+                                        Grid.Row="1" 
+                                        Grid.Column="2"
+                                        Margin="2"
+                                        TextAlignment="Right"
+                                        Text="{Binding InjectSpeed}"
+                                        CommandManager.PreviewExecuted="{mvvm:InvokeCommand NoPasteTextBox_PreviewExecuted}"
+                                        PreviewTextInput="{mvvm:InvokeCommand InjectTextBox_PreviewTextInput}"
+                                        PreviewKeyDown="{mvvm:InvokeCommand InputDataTextBox_PreviewKeyDown}"
+                                        LostFocus="{mvvm:InvokeCommand InjectTextBox_LostFocus}"/>
+                                    <TextBlock 
+                                        Text="m/s"
+                                        Grid.Row="1"
+                                        Grid.Column="3"
+                                        Margin="2"/>
 
-        
-        
-        
-        <TabControl Grid.Row="2" Grid.Column="0"  Margin="0, 5, 0, 0">
-            <TabItem Header="出力">
-                <TabItem.DataContext>
-                    <vmodel:OutputLog/>
-                </TabItem.DataContext>
-                <TextBox HorizontalScrollBarVisibility="Auto"
-                         VerticalScrollBarVisibility="Auto"
-                         IsReadOnly="True"
-                         IsReadOnlyCaretVisible="True"
-                         Text="{Binding Log.Text}"
-                         TextChanged="OutputLog_TextChanged"/>
-            </TabItem>
-        </TabControl>
-        
-        
-        <GridSplitter 
-            Grid.Row="2" Grid.Column="0"
-            HorizontalAlignment="Stretch" VerticalAlignment="Top" Height="5"/>
-        <GridSplitter 
-            Grid.Row="1" Grid.Column="1" Grid.RowSpan="2"
-            HorizontalAlignment="Left" VerticalAlignment="Stretch" Width="5"/>
-    </Grid>
+                                    <TextBlock 
+                                        Text="着弾予測(床面)"
+                                        Grid.Row="2"
+                                        Grid.Column="0"
+                                        Grid.ColumnSpan="2"
+                                        Margin="1"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Right"/>
+                                    <TextBox 
+                                        Grid.Row="2"
+                                        Grid.Column="2"
+                                        Margin="2"
+                                        TextAlignment="Right"
+                                        IsReadOnly="True"
+                                        Text="{Binding FallPrediction}"/>
+                                    <TextBlock 
+                                        Text="m"
+                                        Grid.Row="2"
+                                        Grid.Column="3"
+                                        Margin="2"/>
+
+
+                                </Grid>
+                            </DockPanel>
+                        </GroupBox>
+
+                    </DockPanel>
+                </TabItem>
+                <TabItem Header="DR" IsEnabled="False">
+
+                </TabItem>
+            </TabControl>
+
+
+
+
+            <TabControl Grid.Row="2" Grid.Column="0"  Margin="0, 5, 0, 0">
+                <TabItem Header="出力">
+                    <TabItem.DataContext>
+                        <vmodel:OutputLog/>
+                    </TabItem.DataContext>
+                    <TextBox 
+                        HorizontalScrollBarVisibility="Auto"
+                        VerticalScrollBarVisibility="Auto"
+                        IsReadOnly="True"
+                        IsReadOnlyCaretVisible="True"
+                        FontSize="10" 
+                        Text="{Binding Log.Text}"
+                        TextChanged="OutputLog_TextChanged"/>
+                </TabItem>
+            </TabControl>
+
+
+            <GridSplitter 
+                Grid.Row="2" Grid.Column="0"
+                HorizontalAlignment="Stretch" VerticalAlignment="Top" Height="5"/>
+            <GridSplitter 
+                Grid.Row="1" Grid.Column="1" Grid.RowSpan="2"
+                HorizontalAlignment="Left" VerticalAlignment="Stretch" Width="5"/>
+        </Grid>
+    </Viewbox>
 </Window>

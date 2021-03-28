@@ -9,6 +9,7 @@ using MVVMLib;
 /// <summary>
 /// 通信インターフェースモデル
 /// 接続インターフェースをラップする
+/// 通信メッセージのエンコードもここ
 /// </summary>
 namespace ABU2021_ControlAndDebug.Models
 {
@@ -23,7 +24,7 @@ namespace ABU2021_ControlAndDebug.Models
         private JoypadHandl _joypad;
         private Timer _sendMsgTimer;
         private Core.ComROS _ros;
-        private Core.ComSTM _stm;
+        private Core.ComSTM _stm;//こいつら抽象化するのアリ
 
 
         #region Singleton instance
@@ -114,14 +115,20 @@ namespace ABU2021_ControlAndDebug.Models
         public void ConnectSTM()
         {
             if (_isConnected) throw new InvalidOperationException("already connected");
+
+
             try
             {
                 _stm.Connect();
             }
-            catch
+            catch (Exception e)
             {
+#if DEBUG
+                _log.WiteDebugMsg(e.ToString());
+#endif
                 throw;
             }
+            _sendMsgTimer = new Timer(PeriodicSendMsg, null, 0, SendMsgPeriod);
             IsConnected = true;
         }
         public void Disconnect()
@@ -145,33 +152,45 @@ namespace ABU2021_ControlAndDebug.Models
             throw new Exception("`IsConnected` is true, but not connect device");
         }
 
-
-        public void SendMsg<T>(Core.ControlType.SendHedder header, T data) where T : struct
+        public void SendMsg(Core.SendDataMsg msg)
         {
-            if (_stm.IsConnected) _stm.Send((byte)header, data);
-            else if (_ros.IsConnected)
-            {
-                var type = typeof(T);
+            if (!IsConnected) throw new InvalidOperationException("not connected");
 
-                try
+            try
+            {
+                if (_stm.IsConnected) _stm.Send(msg);
+                else if (_ros.IsConnected)_ros.Send(msg);
+            }
+            catch
+            {
+                //Disconnect();
+                _log.WiteErrorMsg("切断されました");
+                _sendMsgTimer.Dispose();
+                IsConnected = false;
+            }
+        }
+        public async Task<Core.ReceiveDataMsg> ReadMsgAsync()
+        {
+            if (!IsConnected) throw new InvalidOperationException("not connected");
+
+            try
+            {
+                if (_stm.IsConnected)
                 {
-                    if (type == typeof(float) || type == typeof(double) || type == typeof(decimal))
-                    {
-                        float d = (float)(object)data;
-                        _ros.Send(header.ToString(), d.ToString("F3"));
-                    }
-                    else
-                    {
-                        _ros.Send(header.ToString(), data.ToString());
-                    }
+                    return await _stm.ReadMsgAsync();
                 }
-                catch
+                else //if (_ros.IsConnected)
                 {
-                    //Disconnect();
-                    _log.WiteErrorMsg("切断されました");
-                    _sendMsgTimer.Dispose();
-                    IsConnected = false;
+                    return await _ros.ReadMsgAsync();
                 }
+
+            }
+            catch
+            {
+                _log.WiteErrorMsg("切断されました");
+                _sendMsgTimer.Dispose();
+                IsConnected = false;
+                throw;
             }
         }
 
@@ -184,11 +203,11 @@ namespace ABU2021_ControlAndDebug.Models
                 {
                     if (_stm.IsConnected)
                     {
-                        _stm.Send((byte)Core.ControlType.SendHedder.JOY, _joypad.GetPad().JoyInfoEx);
+                        _stm.Send(new Core.SendDataMsg(Core.SendDataMsg.HeaderType.JOY, _joypad.GetPad().JoyInfoEx));
                     }
                     else if (_ros.IsConnected)
                     {
-                        _ros.Send(Core.ControlType.SendHedder.JOY.ToString(), _joypad.GetPad().JoyInfoEx);
+                        _ros.Send(new Core.SendDataMsg(Core.SendDataMsg.HeaderType.JOY, _joypad.GetPad().JoyInfoEx));
                     }
                 }
                 catch

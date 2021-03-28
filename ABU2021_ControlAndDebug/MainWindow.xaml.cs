@@ -23,6 +23,10 @@ namespace ABU2021_ControlAndDebug
         public MainWindow()
         {
             InitializeComponent();
+
+            //コントロールの拡大
+            MainGrid.Height = (SystemParameters.WorkArea.Height + 30) / 1.3;//何故かGDPのディスプレイだとずれるのでプラス
+            MainGrid.Width = SystemParameters.WorkArea.Width / 1.3;
         }
 
         /// <summary>
