@@ -4,14 +4,218 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ABU2021_ControlAndDebug.SubWindows"
+        xmlns:vm="clr-namespace:ABU2021_ControlAndDebug.ViewModels"
         mc:Ignorable="d"
-        Title="JoypadTestWindow" Height="150" Width="250">
+        Title="JoypadTestWindow" Height="430" Width="500"
+        ResizeMode="NoResize">
+    <Window.DataContext>
+        <vm:JoypadTest/>
+    </Window.DataContext>
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1*"/>
-            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="2*"/>
             <ColumnDefinition Width="1*"/>
         </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="3*"/>
+        </Grid.RowDefinitions>
         
+        <DockPanel Grid.Row="0" Grid.Column="0" LastChildFill="False">
+            <ToggleButton DockPanel.Dock="Top" Content="L2" 
+                          MinWidth="35" Height="50"
+                          Background="LightGray" Margin="2" 
+                          IsTabStop="False"
+                          IsHitTestVisible="False"
+                          IsChecked="{Binding Button_L2, Mode=OneWay}"/>
+            <ToggleButton DockPanel.Dock="Left" Content="L1" 
+                          MinWidth="70"
+                          Background="LightGray" Margin="2" 
+                          IsTabStop="False"
+                          IsHitTestVisible="False"
+                          IsChecked="{Binding Button_L1, Mode=OneWay}"/>
+            <ToggleButton DockPanel.Dock="Right" Content="L3" 
+                          MinWidth="70"
+                          Background="LightGray" Margin="2" 
+                          IsTabStop="False"
+                          IsHitTestVisible="False"
+                          IsChecked="{Binding Button_L3, Mode=OneWay}"/>
+        </DockPanel>
+        <DockPanel Grid.Row="0" Grid.Column="1" LastChildFill="False">
+            <ToggleButton DockPanel.Dock="Top" Content="R2" 
+                          MinWidth="35" Height="50"
+                          Background="LightGray" Margin="2" 
+                          IsTabStop="False"
+                          IsHitTestVisible="False"
+                          IsChecked="{Binding Button_R2, Mode=OneWay}"/>
+            <ToggleButton DockPanel.Dock="Left" Content="R3" 
+                          MinWidth="70"
+                          Background="LightGray" Margin="2" 
+                          IsTabStop="False"
+                          IsHitTestVisible="False"
+                          IsChecked="{Binding Button_R3, Mode=OneWay}"/>
+            <ToggleButton DockPanel.Dock="Right" Content="R1" 
+                          MinWidth="70"
+                          Background="LightGray" Margin="2" 
+                          IsTabStop="False"
+                          IsHitTestVisible="False"
+                          IsChecked="{Binding Button_R1, Mode=OneWay}"/>
+        </DockPanel>
+        
+        <Grid Grid.Row="1" Grid.Column="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+            <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3"
+                    BorderThickness="1"
+                    BorderBrush="Black"
+                    Background="White"
+                    Width="75"
+                    Height="75">
+                <Canvas>
+                    <Ellipse Height="2" Width="2" Fill="Red"
+                             Canvas.Left="{Binding AnalogLeftX}"
+                             Canvas.Top="{Binding AnalogLeftY}"/>
+                </Canvas>
+            </Border>
+            <ToggleButton Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Content="↑" 
+                          Width="30" Height="30"
+                          Background="LightGray" Margin="2" 
+                          IsTabStop="False"
+                          IsHitTestVisible="False"
+                          IsChecked="{Binding Button_Up, Mode=OneWay}"/>
+            <ToggleButton Grid.Row="1" Grid.Column="1" Content="←" 
+                          Width="30" Height="30"
+                          Background="LightGray" 
+                          IsTabStop="False"
+                          IsHitTestVisible="False"
+                          IsChecked="{Binding Button_Left, Mode=OneWay}"/>
+            <ToggleButton Grid.Row="1" Grid.Column="2" Content="→" 
+                          Width="30" Height="30"
+                          Background="LightGray" Margin="2" 
+                          IsTabStop="False"
+                          IsHitTestVisible="False"
+                          IsChecked="{Binding Button_Right, Mode=OneWay}"/>
+            <ToggleButton Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Content="↓" 
+                          Width="30" Height="30"
+                          Background="LightGray" Margin="2" 
+                          IsTabStop="False"
+                          IsHitTestVisible="False"
+                          IsChecked="{Binding Button_Down, Mode=OneWay}"/>
+        </Grid>
+        <Grid Grid.Row="1" Grid.Column="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="2*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+            <ToggleButton Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Content="Y" 
+                          Width="30" Height="30"
+                          Background="LightGray" Margin="2" 
+                          IsTabStop="False"
+                          IsHitTestVisible="False"
+                          IsChecked="{Binding Button_Y, Mode=OneWay}"/>
+            <ToggleButton Grid.Row="1" Grid.Column="0" Content="X" 
+                          Width="30" Height="30"
+                          Background="LightGray" Margin="2" 
+                          IsTabStop="False"
+                          IsHitTestVisible="False"
+                          IsChecked="{Binding Button_X, Mode=OneWay}"/>
+            <ToggleButton Grid.Row="1" Grid.Column="1" Content="B" 
+                          Width="30" Height="30"
+                          Background="LightGray" Margin="2" 
+                          IsTabStop="False"
+                          IsHitTestVisible="False"
+                          IsChecked="{Binding Button_B, Mode=OneWay}"/>
+            <ToggleButton Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Content="A" 
+                          Width="30" Height="30"
+                          Background="LightGray" Margin="2" 
+                          IsTabStop="False"
+                          IsHitTestVisible="False"
+                          IsChecked="{Binding Button_A, Mode=OneWay}"/>
+            <Border Grid.Column="2" Grid.Row="0" Grid.RowSpan="3"
+                    BorderThickness="1"
+                    BorderBrush="Black"
+                    Background="White"
+                    Width="75"
+                    Height="75">
+                <Canvas>
+                    <Ellipse Height="2" Width="2" Fill="Red"
+                             Canvas.Left="{Binding AnalogRightX}"
+                             Canvas.Top="{Binding AnalogRightY}"/>
+                </Canvas>
+            </Border>
+        </Grid>
+
+
+        <StackPanel Grid.Row="0" Grid.Column="2" Grid.RowSpan="2" Orientation="Vertical" Margin="3" Background="WhiteSmoke">
+            <TextBlock Text="Data" x:Name="DataText" FontSize="10" HorizontalAlignment="Center" FontStyle="Italic" Background="LightGray"/>
+            <TextBlock Text="Size" FontSize="{Binding FontSize, ElementName=DataText}"/>
+            <TextBox IsReadOnly="True"
+                     FontSize="{Binding FontSize, ElementName=DataText}"
+                     Text="{Binding Size}"/>
+            <TextBlock Text="Flags" FontSize="{Binding FontSize, ElementName=DataText}"/>
+            <TextBox IsReadOnly="True"
+                     FontSize="{Binding FontSize, ElementName=DataText}"
+                     Text="{Binding Flags}"/>
+            <TextBlock Text="Xpos" FontSize="{Binding FontSize, ElementName=DataText}"/>
+            <TextBox IsReadOnly="True"
+                     FontSize="{Binding FontSize, ElementName=DataText}"
+                     Text="{Binding Xpos}"/>
+            <TextBlock Text="Ypos" FontSize="{Binding FontSize, ElementName=DataText}"/>
+            <TextBox IsReadOnly="True"
+                     FontSize="{Binding FontSize, ElementName=DataText}"
+                     Text="{Binding Ypos}"/>
+            <TextBlock Text="Zpos" FontSize="{Binding FontSize, ElementName=DataText}"/>
+            <TextBox IsReadOnly="True"
+                     FontSize="{Binding FontSize, ElementName=DataText}"
+                     Text="{Binding Zpos}"/>
+            <TextBlock Text="Xrot" FontSize="{Binding FontSize, ElementName=DataText}"/>
+            <TextBox IsReadOnly="True"
+                     FontSize="{Binding FontSize, ElementName=DataText}"
+                     Text="{Binding Xrot}"/>
+            <TextBlock Text="Yrot" FontSize="{Binding FontSize, ElementName=DataText}"/>
+            <TextBox IsReadOnly="True"
+                     FontSize="{Binding FontSize, ElementName=DataText}"
+                     Text="{Binding Yrot}"/>
+            <TextBlock Text="Zrot" FontSize="{Binding FontSize, ElementName=DataText}"/>
+            <TextBox IsReadOnly="True"
+                     FontSize="{Binding FontSize, ElementName=DataText}"
+                     Text="{Binding Zrot}"/>
+            <TextBlock Text="Button" FontSize="{Binding FontSize, ElementName=DataText}"/>
+            <TextBox IsReadOnly="True"
+                     FontSize="{Binding FontSize, ElementName=DataText}"
+                     Text="{Binding Button}"/>
+            <TextBlock Text="ButtonNum" FontSize="{Binding FontSize, ElementName=DataText}"/>
+            <TextBox IsReadOnly="True"
+                     FontSize="{Binding FontSize, ElementName=DataText}"
+                     Text="{Binding ButtonNum}"/>
+            <TextBlock Text="POV" FontSize="{Binding FontSize, ElementName=DataText}"/>
+            <TextBox IsReadOnly="True"
+                     FontSize="{Binding FontSize, ElementName=DataText}"
+                     Text="{Binding POV}"/>
+            <TextBlock Text="Reserved1" FontSize="{Binding FontSize, ElementName=DataText}"/>
+            <TextBox IsReadOnly="True"
+                     FontSize="{Binding FontSize, ElementName=DataText}"
+                     Text="{Binding Reserved1}"/>
+            <TextBlock Text="Reserved2" FontSize="{Binding FontSize, ElementName=DataText}"/>
+            <TextBox IsReadOnly="True"
+                     FontSize="{Binding FontSize, ElementName=DataText}"
+                     Text="{Binding Reserved2}"/>
+
+        </StackPanel>
     </Grid>
 </Window>

@@ -52,6 +52,7 @@ namespace ABU2021_ControlAndDebug.Models
         {
             if (!_debugSate.IsOutputMsg) return;
             Text += "[Debug] : " + DateTime.Now.ToString("HH:mm:ss:fff") + " " + s + '\n';
+            //Text += "[Debug] : " + s + '\n';
         }
         public void WiteErrorMsg(string s)
         {

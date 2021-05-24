@@ -76,6 +76,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
         private ICommand _connectStmUsb_Click;
         private ICommand _disconnect_Click;
         private ICommand _activeJoypad_Click;
+        private ICommand _viewJoypad_Click;
 
         public ICommand File_Click
         {
@@ -235,6 +236,23 @@ namespace ABU2021_ControlAndDebug.ViewModels
                                 IsCheckedJoypad = false;
                             }
                         }));
+            }
+        }
+        public ICommand ViewJoypad_Click
+        {
+            get
+            {
+
+                return _viewJoypad_Click ??
+                  (_viewJoypad_Click = CreateCommand(
+                      (object sender) =>
+                      {
+                          var main = sender as Window;
+                          if (main == null) return;
+                          var win = new SubWindows.JoypadTestWindow();
+                          win.Owner = main;
+                          win.ShowDialog();
+                      }));
             }
         }
         #endregion

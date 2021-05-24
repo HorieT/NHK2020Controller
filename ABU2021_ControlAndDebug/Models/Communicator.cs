@@ -24,6 +24,7 @@ namespace ABU2021_ControlAndDebug.Models
         private JoypadHandl _joypad;
         private Timer _sendMsgTimer;
         private Core.ComDevice _comDevice;
+        private Core.SendDataMsg _sendMsgJoy = new Core.SendDataMsg(Core.SendDataMsg.HeaderType.JOY, new JoypadControl.Joypad.JOYINFOEX());
 
 
         #region Singleton instance
@@ -186,20 +187,21 @@ namespace ABU2021_ControlAndDebug.Models
         {
             if (_joypad.IsEnabled)
             {
-                _log.WiteDebugMsg("send start joy");
-                try
-                {
-                    Task.Run(async () =>{
-                        await _comDevice?.SendMsgAsync(new Core.SendDataMsg(Core.SendDataMsg.HeaderType.JOY, _joypad.GetPad().JoyInfoEx));
-                    });
-                }
-                catch
-                {
-                    //Disconnect();
-                    _log.WiteErrorMsg("切断されました");
-                    Disconnect();
-                }
-                _log.WiteDebugMsg("sended joy");
+                Task.Run(async () => {
+                    try
+                    {
+                        //_sendMsgJoy.Reset(Core.SendDataMsg.HeaderType.JOY, _joypad.GetPad().JoyInfoEx);
+                        var data = new Core.SendDataMsg(Core.SendDataMsg.HeaderType.JOY, _joypad.GetPad().JoyInfoEx);
+                        await _comDevice?.SendMsgAsync(data);
+                        _log.WiteDebugMsg(data.ConvString());
+                    }
+                    catch
+                    {
+                        //Disconnect();
+                        _log.WiteErrorMsg("切断されました");
+                        Disconnect();
+                    }
+                });
             }
         }
         private void ConnectStatusChage()

@@ -88,7 +88,7 @@ namespace ABU2021_ControlAndDebug.Models
         {
             if(IsExisted == false)
             {
-                if (IsExisted == false) _log.WiteErrorMsg("ジョイパッドがありません");
+                _log.WiteErrorMsg("ジョイパッドがありません");
                 throw new InvalidOperationException("Joypad not found");
             }
 

@@ -16,7 +16,7 @@ namespace JoypadControl
         {
             JoyInfoEx = new JOYINFOEX();
             JoyInfoEx.dwSize = (uint)Marshal.SizeOf(typeof(JOYINFOEX));
-            JoyInfoEx.dwFlags = JOY_RETURNALL;
+            JoyInfoEx.dwFlags = JOY_RETURNALL | JOY_CAL_READ5;
 
             ptr = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(JOYINFOEX)));
 

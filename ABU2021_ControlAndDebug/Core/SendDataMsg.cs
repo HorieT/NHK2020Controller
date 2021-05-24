@@ -42,9 +42,14 @@ namespace ABU2021_ControlAndDebug.Core
 
         public SendDataMsg(HeaderType header, object data)
         {
-            if (DataType[header] != data.GetType()) throw new ArgumentException("Header and type do not match");
-            Header = header;
-            Data = data;
+            try
+            {
+                Reset(header, data);
+            }
+            catch
+            {
+                throw;
+            }
         }
 
 
@@ -55,6 +60,12 @@ namespace ABU2021_ControlAndDebug.Core
 
 
         #region Method
+        public void Reset(HeaderType header, object data)
+        {
+            if (DataType[header] != data.GetType()) throw new ArgumentException("Header and type do not match");
+            Header = header;
+            Data = data;
+        }
         public string ConvString()
         {
             string head = Header.ToString();

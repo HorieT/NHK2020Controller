@@ -69,8 +69,9 @@
                         </MenuItem.ToolTip>
                     </MenuItem>
                 </MenuItem>
-                <MenuItem Header="表示(_V)" DockPanel.Dock="Left" IsEnabled="False">
-                    <MenuItem Header="ジョイパッド入力" IsEnabled="{Binding IsCheckedJoypad}"/>
+                <MenuItem Header="表示(_V)" DockPanel.Dock="Left">
+                    <MenuItem Header="ジョイパッド入力" IsEnabled="{Binding IsCheckedJoypad}" 
+                              Command="{Binding ViewJoypad_Click}" CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"/>
                 </MenuItem>
                 <MenuItem Header="接続(_C)" DockPanel.Dock="Left">
                     <MenuItem Header="切断" IsEnabled="{Binding IsEnableDissconnect}" Command="{Binding Disconnect_Click}"/>
@@ -78,6 +79,8 @@
                     <MenuItem Header="TR-ROS(Wifi)" IsCheckable="True" IsEnabled="{Binding IsEnableConnect}" IsChecked="{Binding IsCheckedRosWifi}" Command="{Binding ConnectTrRosWifi_Click}"/>
                     <MenuItem Header="DR-ROS(Wifi)" IsCheckable="True" IsEnabled="False" IsChecked="{Binding IsCheckedRosWifi}" Command="{Binding ConnectDrRosWifi_Click}"/>
                     <MenuItem Header="STM(USB)" IsCheckable="True" IsEnabled="{Binding IsEnableConnect}" IsChecked="{Binding IsCheckedStmUsb}" Command="{Binding ConnectStmUsb_Click}"/>
+                    <Separator/>
+                    <MenuItem Header="接続テスト" IsCheckable="True" IsEnabled="{Binding IsEnableConnect}" IsChecked="{Binding IsCheckedStmUsb}" Command="{Binding ConnectStmUsb_Click}"/>
                     <Separator/>
                     <MenuItem Header="ジョイパッド" IsCheckable="True" IsChecked="{Binding IsCheckedJoypad}" Command="{Binding ActiveJoypad_Click}"/>
                 </MenuItem>
