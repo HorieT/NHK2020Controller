@@ -28,6 +28,8 @@ namespace ABU2021_ControlAndDebug.Core
             I_ANGLE = 0x80,
             //sp
             POSITION = 0xE0,
+            //debug
+            DEBUG_POS = 0xF0
         }
 
         public static readonly Dictionary<HeaderType, Type> DataType = new Dictionary<HeaderType, Type>
@@ -38,6 +40,7 @@ namespace ABU2021_ControlAndDebug.Core
             {HeaderType.INJECT_END, typeof(bool)},
             {HeaderType.I_ANGLE, typeof(float)},
             {HeaderType.POSITION, typeof((Vector, double))},
+            {HeaderType.DEBUG_POS, typeof((Vector, double, Vector, double))},
         };
         #endregion
 
@@ -93,6 +96,10 @@ namespace ABU2021_ControlAndDebug.Core
                 else if (DataType[Header] == typeof((Vector, double)))
                 {
                     Data = ToPosition(msgData);
+                }
+                else if (DataType[Header] == typeof((Vector, double, Vector, double)))
+                {
+                    Data = ToDebugPos(msgData);
                 }
                 else
                 {
@@ -151,6 +158,10 @@ namespace ABU2021_ControlAndDebug.Core
                 {
                     Data = ToPosition(msg, 1);
                 }
+                else if (DataType[Header] == typeof((Vector, double, Vector, double)))
+                {
+                    Data = ToDebugPos(msg, 1);
+                }
                 else
                 {
                     throw new NotImplementedException();
@@ -192,6 +203,32 @@ namespace ABU2021_ControlAndDebug.Core
             Vector vec = new Vector(BitConverter.ToSingle(array, offset), BitConverter.ToSingle(array, offset+4));
             double rad = BitConverter.ToSingle(array, offset+8);
             return (vec, rad);
+        }
+        private static (Vector, double, Vector, double) ToDebugPos(String msgData)
+        {
+            var split = Regex.Split(msgData, ",");
+            try
+            {
+                Vector vec1 = new Vector(double.Parse(split[0]), double.Parse(split[1]));
+                double rad1 = double.Parse(split[2]);
+                Vector vec2 = new Vector(double.Parse(split[3]), double.Parse(split[4]));
+                double rad2 = double.Parse(split[5]);
+                return (vec1, rad1, vec2, rad2);
+            }
+            catch
+            {
+                throw new ArgumentException();
+            }
+        }
+        private static (Vector, double, Vector, double) ToDebugPos(IReadOnlyList<byte> msg, int offset)
+        {
+            if (msg.Count != 24 + offset) throw new ArgumentException();
+            var array = msg.ToArray();
+            Vector vec1 = new Vector(BitConverter.ToSingle(array, offset), BitConverter.ToSingle(array, offset + 4));
+            double rad1 = BitConverter.ToSingle(array, offset + 8);
+            Vector vec2 = new Vector(BitConverter.ToSingle(array, offset + 12), BitConverter.ToSingle(array, offset + 16));
+            double rad2 = BitConverter.ToSingle(array, offset + 20);
+            return (vec1, rad1, vec2, rad2);
         }
         #endregion
     }
