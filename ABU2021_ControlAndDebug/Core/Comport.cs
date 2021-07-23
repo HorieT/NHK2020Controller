@@ -7,6 +7,9 @@ using System.Text.RegularExpressions;
 
 namespace ABU2021_ControlAndDebug.Core
 {
+    /// <summary>
+    /// USBシリアル通信ポートのラッパ
+    /// </summary>
     class Comport
     {
         private static readonly Regex RegexUSB = new Regex(@"^USB");

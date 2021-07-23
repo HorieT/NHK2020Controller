@@ -7,10 +7,16 @@ using System.Management;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 using JoypadControl;
+using System.Threading;
 
 namespace ABU2021_ControlAndDebug.Core
 {
+    /// <summary>
+    /// STMとの接続ラッパ
+    ///つまりUSBポート
+    /// </summary>
     class ComStm : ComDevice
     {
         private static readonly int MaxQueueSize = 256;
@@ -19,6 +25,7 @@ namespace ABU2021_ControlAndDebug.Core
         private List<byte> _readDataBuff = new List<byte>();
         private bool _isConencted = false;
         private Task _readTask;
+        private SynchronizationContext _context;
 
 
         #region Property
@@ -94,9 +101,9 @@ namespace ABU2021_ControlAndDebug.Core
             {
                 _port.Close();
             } 
-            catch
+            catch(System.IO.IOException ex)
             {
-                throw;
+                Trace.WriteLine("Disconnect error. -> " + ex.ToString() + " : " + ex.Message);
             }
             finally
             {
@@ -112,19 +119,28 @@ namespace ABU2021_ControlAndDebug.Core
         /// <param name="data"></param>
         public async Task SendMsgAsync(SendDataMsg msg)
         {
-            await Task.Run(() =>
+            if (!IsConnected) throw new System.IO.IOException("Nonconnected");
+            try
             {
-                var sendData = COBS_Encode(msg.ConvByte());
-                try
+                await Task.Run(() =>
                 {
-                    _port.Write(sendData, 0, sendData.Length);
-                }
-                catch
-                {
-                    Disconnect();
-                    throw new InvalidOperationException("Connecton error");
-                }
-            });
+                    var sendData = COBS_Encode(msg.ConvByte());
+                    try
+                    {
+                        _port.Write(sendData, 0, sendData.Length);
+                    }
+                    catch
+                    {
+                        Disconnect();
+                        throw;
+                    }
+                });
+
+            }
+            catch
+            {
+                throw;
+            }
 
         }
         /// <summary>
@@ -138,6 +154,7 @@ namespace ABU2021_ControlAndDebug.Core
                 ReceiveDataMsg msg;
                 while (true)
                 {
+                    if (!IsConnected) throw new System.IO.IOException("Disconnected");
                     if (!_readMsgQueue.IsEmpty)
                     {
                         if (_readMsgQueue.TryDequeue(out msg))
@@ -204,7 +221,7 @@ namespace ABU2021_ControlAndDebug.Core
         {
             return Task.Run(() =>
             {
-                int byteData;
+                int byteData = -1;
                 while (_isConencted)
                 {
                     try
@@ -214,6 +231,12 @@ namespace ABU2021_ControlAndDebug.Core
                     catch (TimeoutException)
                     {
                         byteData = -1;
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.WriteLine("Data reading failed. -> " + ex.ToString() + " : " + ex.Message);
+                        Disconnect();
+                        return;
                     }
 
                     if (byteData != -1)
@@ -227,9 +250,10 @@ namespace ABU2021_ControlAndDebug.Core
                                 {
                                     _readMsgQueue.Enqueue(new ReceiveDataMsg(COBS_Decode(_readDataBuff)));
                                 }
-                                catch
+                                catch(Exception ex)
                                 {
                                     //デコード失敗
+                                    Trace.WriteLine("Message decoding failed. -> " + ex.ToString() + " : "+ ex.Message);
                                 }
                             }
                             _readDataBuff.Clear();
@@ -238,7 +262,7 @@ namespace ABU2021_ControlAndDebug.Core
                 }
             });
         }
-        private byte[] COBS_Encode(IReadOnlyList<byte> inData)
+        private static byte[] COBS_Encode(IReadOnlyList<byte> inData)
         {
             if (inData.Count() > 255 || inData.Count() < 1) throw new ArgumentException("The data size must be 1 to 255 bytes", nameof(inData));
             var encodeData = new List<byte>();
@@ -259,7 +283,7 @@ namespace ABU2021_ControlAndDebug.Core
 
             return encodeData.ToArray();
         }
-        private byte[] COBS_Decode(IReadOnlyList<byte> inData)
+        private static byte[] COBS_Decode(IReadOnlyList<byte> inData)
         {
             if (inData.Last() != 0x00) throw new ArgumentException("The end of the data column must be 0", nameof(inData));
             if (inData.Count() > 257 || inData.Count() < 3) throw new ArgumentException("The data size must be 3 to 257 bytes", nameof(inData));

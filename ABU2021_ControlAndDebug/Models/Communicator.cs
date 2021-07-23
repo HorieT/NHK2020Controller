@@ -25,7 +25,7 @@ namespace ABU2021_ControlAndDebug.Models
         private Timer _sendMsgTimer;
         private Core.ComDevice _comDevice;
         private Core.SendDataMsg _sendMsgJoy = new Core.SendDataMsg(Core.SendDataMsg.HeaderType.JOY, new JoypadControl.Joypad.JOYINFOEX());
-
+        private SynchronizationContext _mainContext;
 
         #region Singleton instance
         private static Communicator _instance;
@@ -40,6 +40,7 @@ namespace ABU2021_ControlAndDebug.Models
         {
             _log = OutputLog.GetInstance;
             _joypad = JoypadHandl.GetInstance;
+            _mainContext = SynchronizationContext.Current;
         }
         ~Communicator()
         {
@@ -92,6 +93,12 @@ namespace ABU2021_ControlAndDebug.Models
 
 
         #region Method
+        /// <summary>
+        /// ROSとの非同期接続
+        /// </summary>
+        /// <param name="machine"></param>
+        /// <param name="useBt"></param>
+        /// <returns></returns>
         public async Task ConnectRosAsync(Core.ControlType.TcpPort machine, bool useBt = false)
         {
             if (IsConnected) throw new InvalidOperationException("already connected");
@@ -113,6 +120,10 @@ namespace ABU2021_ControlAndDebug.Models
             ConnectStatusChage();
 
         }
+        /// <summary>
+        /// USBでのマイコンとの非同期接続
+        /// </summary>
+        /// <returns></returns>
         public async Task ConnectStmAsync()
         {
             if (IsConnected) throw new InvalidOperationException("already connected");
@@ -138,6 +149,7 @@ namespace ABU2021_ControlAndDebug.Models
         public void Disconnect()
         {
             if (!IsConnected) return;// throw new InvalidOperationException("Non connected");
+            _sendMsgTimer.Change(Timeout.Infinite, Timeout.Infinite);
             _sendMsgTimer.Dispose();
 
             try
@@ -161,9 +173,9 @@ namespace ABU2021_ControlAndDebug.Models
             }
             catch
             {
-                //Disconnect();
                 _log.WiteErrorMsg("切断されました");
                 Disconnect();
+                throw;
             }
         }
         public async Task<Core.ReceiveDataMsg> ReadMsgAsync()
@@ -183,6 +195,10 @@ namespace ABU2021_ControlAndDebug.Models
         }
 
 
+        /// <summary>
+        /// 接続デバイス、方式に関わらず周期的に行う送信
+        /// </summary>
+        /// <param name="sender"></param>
         private void PeriodicSendMsg(object sender)
         {
             if (_joypad.IsEnabled)
@@ -197,9 +213,8 @@ namespace ABU2021_ControlAndDebug.Models
                     }
                     catch
                     {
-                        //Disconnect();
-                        _log.WiteErrorMsg("切断されました");
-                        Disconnect();
+                        _log.WiteDebugMsg("送信失敗");
+                        _mainContext.Post(_ => Disconnect(), null);
                     }
                 });
             }

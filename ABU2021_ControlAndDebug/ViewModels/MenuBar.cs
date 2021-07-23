@@ -71,7 +71,8 @@ namespace ABU2021_ControlAndDebug.ViewModels
         private ICommand _file_Click;
         private ICommand _shutdown_Click;
         private ICommand _minimize_Click;
-        private ICommand _connectTrRosWifi_Click;
+        private ICommand _connectTr0RosWifi_Click;
+        private ICommand _connectTr1RosWifi_Click;
         private ICommand _connectDrRosWifi_Click;
         private ICommand _connectStmUsb_Click;
         private ICommand _disconnect_Click;
@@ -114,12 +115,12 @@ namespace ABU2021_ControlAndDebug.ViewModels
                         }));
             }
         }
-        public ICommand ConnectTrRosWifi_Click
+        public ICommand ConnectTr0RosWifi_Click
         {
             get
             {
-                return _connectTrRosWifi_Click ??
-                    (_connectTrRosWifi_Click = CreateCommand(
+                return _connectTr0RosWifi_Click ??
+                    (_connectTr0RosWifi_Click = CreateCommand(
                         (object sender) =>
                         {
                             Log.WiteLine("ROS(Wifi)接続開始...");
@@ -129,6 +130,35 @@ namespace ABU2021_ControlAndDebug.ViewModels
                                 try
                                 {
                                     await Communicator.ConnectRosAsync(Core.ControlType.TcpPort.TR0);
+                                }
+                                catch
+                                {
+                                    Log.WiteLine("接続失敗");
+                                    IsEnableConnect = true;
+                                    IsCheckedRosWifi = false;
+                                    return;
+                                }
+                                Log.WiteLine("接続成功");
+                                IsCheckedRosWifi = true;
+                            });
+                        }));
+            }
+        }
+        public ICommand ConnectTr1RosWifi_Click
+        {
+            get
+            {
+                return _connectTr1RosWifi_Click ??
+                    (_connectTr1RosWifi_Click = CreateCommand(
+                        (object sender) =>
+                        {
+                            Log.WiteLine("ROS(Wifi)接続開始...");
+                            IsEnableConnect = false;
+                            Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await Communicator.ConnectRosAsync(Core.ControlType.TcpPort.TR1);
                                 }
                                 catch
                                 {

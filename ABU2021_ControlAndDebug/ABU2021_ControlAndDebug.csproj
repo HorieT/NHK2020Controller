@@ -95,8 +95,10 @@
     <Compile Include="Core\ReceiveDataMsg.cs" />
     <Compile Include="Core\RosJoyConverter.cs" />
     <Compile Include="Core\SendDataMsg.cs" />
+    <Compile Include="DateTimeTraceListener.cs" />
     <Compile Include="Models\Communicator.cs" />
     <Compile Include="Models\ControlDR0.cs" />
+    <Compile Include="Models\ControlMachineBase.cs" />
     <Compile Include="Models\ControlTR0.cs" />
     <Compile Include="Core\ControlType.cs" />
     <Compile Include="Models\DebugSate.cs" />

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace ABU2021_ControlAndDebug.Core
@@ -68,9 +69,9 @@ namespace ABU2021_ControlAndDebug.Core
                 //_wifiReader.Close();
                 _wifiStream.Close();
             }
-            catch
+            catch(Exception ex)
             {
-                throw;
+                Trace.WriteLine("Disconnect error. -> " + ex.ToString() + " : " + ex.Message);
             }
             finally
             {
@@ -87,7 +88,7 @@ namespace ABU2021_ControlAndDebug.Core
         /// <param name="data"></param>
         public async Task SendMsgAsync(SendDataMsg msg)
         {
-            if (!IsConnected) throw new InvalidOperationException("Not connected");
+            if (!IsConnected) throw new InvalidOperationException("Nonconnected");
             
             try
             {
@@ -97,14 +98,14 @@ namespace ABU2021_ControlAndDebug.Core
             catch
             {
                 Disconnect();
-                throw new InvalidOperationException("Connecton error");
+                throw;
             }
         }
 
 
         public async Task<ReceiveDataMsg> ReadMsgAsync()
         {
-            while (true)
+            while (_isConencted)
             {
                 var data = await _wifiReader.ReadLineAsync();
 
@@ -112,11 +113,14 @@ namespace ABU2021_ControlAndDebug.Core
                 {
                     return new ReceiveDataMsg(data);
                 }
-                catch
+                catch(Exception ex)
                 {
+                    //読み取り失敗
+                    Trace.WriteLine("Message reading failed. -> " + ex.ToString() + " : " + ex.Message + "\n" + data);
                     continue;
                 }
             }
+            throw new InvalidOperationException("Dissconnected");
         }
         #region private method
         private static string GetMyIpaddress()

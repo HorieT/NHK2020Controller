@@ -7,6 +7,9 @@ using MVVMLib;
 
 namespace ABU2021_ControlAndDebug.Models
 {
+    /// <summary>
+    /// この"アプリ"のデバックステータス
+    /// </summary>
     class DebugSate : NotifyPropertyChanged
     {
         #region Singleton instance
