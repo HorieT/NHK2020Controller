@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -12,8 +14,10 @@ namespace ABU2021_ControlAndDebug.ViewModels
 {
     class JoypadTest : ViewModel
     {
-        private const int _checkTime = 50;
+        private const int _checkTime = 30;
         private Timer _checkTimer;
+        private bool _is_check_error = false;
+        private SynchronizationContext _mainContext;
 
 
         #region Model
@@ -25,8 +29,10 @@ namespace ABU2021_ControlAndDebug.ViewModels
         {
             #region get instance
             Joypad = Models.JoypadHandl.GetInstance;
+            _mainContext = SynchronizationContext.Current;
             #endregion
 
+            _is_check_error = false;
             _checkTimer = new Timer(CheckButton, null, 0, _checkTime);
         }
 
@@ -236,45 +242,52 @@ namespace ABU2021_ControlAndDebug.ViewModels
             try
             {
                 var pad = Joypad.GetPad();
+                BitArray bit = new BitArray(pad.Buttons);
+                int[] button = new int[bit.Count / 32];
+                bit.CopyTo(button, 0);
 
-                Size = pad.JoyInfoEx.dwSize.ToString();
-                Flags = pad.JoyInfoEx.dwFlags.ToString();
-                Xpos = pad.JoyInfoEx.dwXpos.ToString();
-                Ypos = pad.JoyInfoEx.dwYpos.ToString();
-                Zpos = pad.JoyInfoEx.dwZpos.ToString();
-                Xrot = pad.JoyInfoEx.dwXrot.ToString();
-                Yrot = pad.JoyInfoEx.dwYrot.ToString();
-                Zrot = pad.JoyInfoEx.dwZrot.ToString();
-                Button = pad.JoyInfoEx.dwButtons.ToString("X8");
-                ButtonNum = pad.JoyInfoEx.dwButtonNumber.ToString();
-                POV = pad.JoyInfoEx.dwPOV.ToString();
-                Reserved1 = pad.JoyInfoEx.dwReserved1.ToString();
-                Reserved2 = pad.JoyInfoEx.dwReserved2.ToString();
+                Xpos = pad.X.ToString();
+                Ypos = pad.Y.ToString();
+                Zpos = pad.Z.ToString();
+                Xrot = pad.RotationX.ToString();
+                Yrot = pad.RotationY.ToString();
+                Zrot = pad.RotationZ.ToString();
+                Button = button[0].ToString("X8");
+                POV = pad.PointOfViewControllers[0].ToString();
 
-                Button_A = (pad.JoyInfoEx.dwButtons & 0x0001) != 0u;
-                Button_B = (pad.JoyInfoEx.dwButtons & 0x0002) != 0u;
-                Button_X = (pad.JoyInfoEx.dwButtons & 0x0004) != 0u;
-                Button_Y = (pad.JoyInfoEx.dwButtons & 0x0008) != 0u;
-                Button_L1 = (pad.JoyInfoEx.dwButtons & 0x0010) != 0u;
-                Button_R1 = (pad.JoyInfoEx.dwButtons & 0x0020) != 0u;
-                Button_L2 = (pad.JoyInfoEx.dwButtons & 0x0400) != 0u;
-                Button_R2 = (pad.JoyInfoEx.dwButtons & 0x0800) != 0u;
-                Button_L3 = (pad.JoyInfoEx.dwButtons & 0x0100) != 0u;
-                Button_R3 = (pad.JoyInfoEx.dwButtons & 0x0200) != 0u;
-                Button_Up = (pad.JoyInfoEx.dwPOV == 31500) || (pad.JoyInfoEx.dwPOV == 0) || (pad.JoyInfoEx.dwPOV == 4500);
-                Button_Right = (pad.JoyInfoEx.dwPOV == 4500) || (pad.JoyInfoEx.dwPOV == 9000) || (pad.JoyInfoEx.dwPOV == 13500);
-                Button_Down = (pad.JoyInfoEx.dwPOV == 13500) || (pad.JoyInfoEx.dwPOV == 18000) || (pad.JoyInfoEx.dwPOV == 22500);
-                Button_Left = (pad.JoyInfoEx.dwPOV == 22500) || (pad.JoyInfoEx.dwPOV == 27000) || (pad.JoyInfoEx.dwPOV == 31500);
+                Button_A = pad.Buttons[0];
+                Button_B = pad.Buttons[1];
+                Button_X = pad.Buttons[2];
+                Button_Y = pad.Buttons[3];
+                Button_L1 = pad.Buttons[4];
+                Button_R1 = pad.Buttons[5];
+                Button_L2 = pad.Buttons[10];
+                Button_R2 = pad.Buttons[11];
+                Button_L3 = pad.Buttons[8];
+                Button_R3 = pad.Buttons[9];
+                Button_Up = (pad.PointOfViewControllers[0] == 31500) || (pad.PointOfViewControllers[0] == 0) || (pad.PointOfViewControllers[0] == 4500);
+                Button_Right = (pad.PointOfViewControllers[0] == 4500) || (pad.PointOfViewControllers[0] == 9000) || (pad.PointOfViewControllers[0] == 13500);
+                Button_Down = (pad.PointOfViewControllers[0] == 13500) || (pad.PointOfViewControllers[0] == 18000) || (pad.PointOfViewControllers[0] == 22500);
+                Button_Left = (pad.PointOfViewControllers[0] == 22500) || (pad.PointOfViewControllers[0] == 27000) || (pad.PointOfViewControllers[0] == 31500);
 
-                AnalogLeftX = (int)(((float)pad.JoyInfoEx.dwXpos) / ushort.MaxValue * 75);
-                AnalogLeftY = (int)(((float)pad.JoyInfoEx.dwYpos) / ushort.MaxValue * 75);
-                AnalogRightX = (int)(((float)pad.JoyInfoEx.dwXrot) / ushort.MaxValue * 75);
-                AnalogRightY = (int)(((float)pad.JoyInfoEx.dwYrot) / ushort.MaxValue * 75);
+                AnalogLeftX = (int)(((float)pad.X) / ushort.MaxValue * 75);
+                AnalogLeftY = (int)(((float)pad.Y) / ushort.MaxValue * 75);
+                AnalogRightX = (int)(((float)pad.RotationX) / ushort.MaxValue * 75);
+                AnalogRightY = (int)(((float)pad.RotationY) / ushort.MaxValue * 75);
             }
-            catch
+            catch(Exception ex)
             {
-                _checkTimer.Change(Timeout.Infinite, Timeout.Infinite);
-                //MessageBox.Show("Joypadが認識できません", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (!_is_check_error)
+                {
+                    _mainContext.Post(_ => {
+                        _is_check_error = true;
+                        _checkTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                        MessageBox.Show("Joypadが認識できません", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+                        //Application.Current.MainWindow.Close();
+                    }, null);
+
+                    Trace.WriteLine("Joypad get state error. -> " + ex.ToString() + " : " + ex.Message);
+                }
                 return;
             }
         }

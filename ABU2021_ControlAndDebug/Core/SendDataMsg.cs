@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using JoypadControl;
+using SharpDX.DirectInput;
 
 namespace ABU2021_ControlAndDebug.Core
 {
@@ -35,7 +35,7 @@ namespace ABU2021_ControlAndDebug.Core
             {HeaderType.I_LOAD,typeof(byte)},
             {HeaderType.INJECT, typeof(float)},
             {HeaderType.I_ANGLE, typeof(float)},
-            {HeaderType.JOY, typeof(Joypad.JOYINFOEX)},
+            {HeaderType.JOY, typeof(JoystickState)},
         };
         #endregion
 
@@ -83,7 +83,7 @@ namespace ABU2021_ControlAndDebug.Core
             {
                 switch (Data)
                 {
-                    case Joypad.JOYINFOEX joy:
+                    case JoystickState joy:
                         data = JoyToString(joy);
                         break;
                     default:
@@ -125,7 +125,7 @@ namespace ABU2021_ControlAndDebug.Core
                     msg.AddRange(BitConverter.GetBytes(d));
                     break;
                 /*以下自己定義型*/
-                case Joypad.JOYINFOEX joy:
+                case JoystickState joy:
                     msg.AddRange(JoyToByte(joy));
                     break;
                 default:
@@ -135,23 +135,23 @@ namespace ABU2021_ControlAndDebug.Core
         }
 
 
-        private static string JoyToString(Joypad.JOYINFOEX joy)
+        private static string JoyToString(JoystickState joy)
         {
             return 
-                RosJoyConverter.ButtonConv(joy).ToString("X8") + "," +
-                RosJoyConverter.AnalogToFloat(joy.dwXpos).ToString("F3") + "," +
-                RosJoyConverter.AnalogToFloat(joy.dwYpos).ToString("F3") + "," +
-                RosJoyConverter.AnalogToFloat(joy.dwXrot).ToString("F3") + "," +
-                RosJoyConverter.AnalogToFloat(joy.dwZrot).ToString("F3");
+                JoyPad.ButtonConv(joy).ToString("X8") + "," +
+                JoyPad.AnalogToFloat(joy.X).ToString("F3") + "," +
+                JoyPad.AnalogToFloat(joy.Y).ToString("F3") + "," +
+                JoyPad.AnalogToFloat(joy.RotationX).ToString("F3") + "," +
+                JoyPad.AnalogToFloat(joy.RotationY).ToString("F3");
         }
-        private static List<byte> JoyToByte(Joypad.JOYINFOEX joy)
+        private static List<byte> JoyToByte(JoystickState joy)
         {
             List<byte> packet = new List<byte>();
-            packet.AddRange(BitConverter.GetBytes(RosJoyConverter.ButtonConv(joy)));
-            packet.Add(RosJoyConverter.AnalogToByte(joy.dwXpos));//X軸
-            packet.Add(RosJoyConverter.AnalogToByte(joy.dwYpos));//Y軸
-            packet.Add(RosJoyConverter.AnalogToByte(joy.dwXrot));//X回転
-            packet.Add(RosJoyConverter.AnalogToByte(joy.dwYrot));//Y回転
+            packet.AddRange(BitConverter.GetBytes(JoyPad.ButtonConv(joy)));
+            packet.Add(JoyPad.AnalogToByte(joy.X));//X軸
+            packet.Add(JoyPad.AnalogToByte(joy.Y));//Y軸
+            packet.Add(JoyPad.AnalogToByte(joy.RotationX));//X回転
+            packet.Add(JoyPad.AnalogToByte(joy.RotationY));//Y回転
             //checksum
             packet.Add(packet.Aggregate((sum, item) => (byte)(sum + item)));//byte列にはSum()が使えない
             return packet;

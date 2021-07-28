@@ -92,14 +92,14 @@
     <Compile Include="Core\Comport.cs" />
     <Compile Include="Core\ComRos.cs" />
     <Compile Include="Core\ComStm.cs" />
+    <Compile Include="Core\JoyPad.cs" />
     <Compile Include="Core\ReceiveDataMsg.cs" />
-    <Compile Include="Core\RosJoyConverter.cs" />
     <Compile Include="Core\SendDataMsg.cs" />
     <Compile Include="DateTimeTraceListener.cs" />
     <Compile Include="Models\Communicator.cs" />
     <Compile Include="Models\ControlDR0.cs" />
     <Compile Include="Models\ControlMachineBase.cs" />
-    <Compile Include="Models\ControlTR0.cs" />
+    <Compile Include="Models\ControlTR.cs" />
     <Compile Include="Core\ControlType.cs" />
     <Compile Include="Models\DebugSate.cs" />
     <Compile Include="Models\JoypadHandl.cs" />
@@ -108,7 +108,7 @@
     <Compile Include="SubWindows\JoypadTestWindow.xaml.cs">
       <DependentUpon>JoypadTestWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ViewModels\ControlTabTR0.cs" />
+    <Compile Include="ViewModels\ControlTabTR.cs" />
     <Compile Include="ViewModels\JoypadTest.cs" />
     <Compile Include="ViewModels\MapControl.cs" />
     <Compile Include="ViewModels\MenuBar.cs" />
@@ -162,10 +162,6 @@
     <Folder Include="Views\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JoypadControl\JoypadControl.csproj">
-      <Project>{93de9813-c723-4cae-a0f3-7618e7b0cb3c}</Project>
-      <Name>JoypadControl</Name>
-    </ProjectReference>
     <ProjectReference Include="..\MVVMLib\MVVMLib.csproj">
       <Project>{73118484-0e54-41f7-964d-e38292082487}</Project>
       <Name>MVVMLib</Name>

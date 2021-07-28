@@ -4,11 +4,9 @@ using System.Collections.Generic;
 using System.IO.Ports;
 using System.Linq;
 using System.Management;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
-using JoypadControl;
 using System.Threading;
 
 namespace ABU2021_ControlAndDebug.Core
@@ -25,7 +23,6 @@ namespace ABU2021_ControlAndDebug.Core
         private List<byte> _readDataBuff = new List<byte>();
         private bool _isConencted = false;
         private Task _readTask;
-        private SynchronizationContext _context;
 
 
         #region Property
