@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using JoypadControl;
 using MVVMLib;
+using SharpDX.DirectInput;
 
 namespace ABU2021_ControlAndDebug.Models
 {
@@ -14,14 +16,12 @@ namespace ABU2021_ControlAndDebug.Models
     /// padナンバーは0選択固定
     /// GPD(Xboxコン)とDualshockのキー配置は全く違う　うんち！！！！！！！！！！
     /// 当面はGPDのみで考える
-    /// 
-    ///  JoypadControlがY回転を読んでくれないorz
     /// </summary>
     class JoypadHandl : NotifyPropertyChanged
     {
-        private static readonly uint PAD_NUM = 0;
+        //private static readonly uint PAD_NUM = 0;
         private OutputLog _log;
-        private Xbox360_JoyPad _pad;
+        private Core.JoyPad _pad;
         private Timer _checkPad;
 
 
@@ -37,7 +37,7 @@ namespace ABU2021_ControlAndDebug.Models
         private JoypadHandl()
         {
             _log = OutputLog.GetInstance;
-            _pad = new Xbox360_JoyPad();
+            _pad = new Core.JoyPad();
             if (IsExisted == false) _log.WiteErrorMsg("ジョイパッドがありません");
             else IsEnabled = true;
             _checkPad = new Timer(CheckPad, null, 0, 5000);//周期的にパッドの接続を確認
@@ -53,10 +53,13 @@ namespace ABU2021_ControlAndDebug.Models
         public bool IsExisted
         {
             get 
-            { 
-                uint[] pads = _pad.GetJoypads();
-
-                IsExisted = (pads.Count(i => i == PAD_NUM) == 1);
+            {
+                if (_pad.IsEnabled) IsExisted = true;
+                else
+                {
+                    var pads = _pad.GetDevices();
+                    IsExisted = (pads.Count() > 0);
+                }
                 return _isExisted;
             }
             private set 
@@ -73,7 +76,10 @@ namespace ABU2021_ControlAndDebug.Models
             set 
             { 
                 if(IsExisted || !value)
-                    SetProperty(ref _isEnabled, value); 
+                {
+                    if (value) _pad.SetDevice(_pad.GetDevices()[0], IntPtr.Zero);
+                    SetProperty(ref _isEnabled, value);
+                }
             }
         }
         public bool IsDebug
@@ -84,23 +90,23 @@ namespace ABU2021_ControlAndDebug.Models
         #endregion
 
 
-        public Xbox360_JoyPad GetPad()
+        public JoystickState GetPad()
         {
-            if(IsExisted == false)
+            if(!_pad.IsEnabled)
             {
                 _log.WiteErrorMsg("ジョイパッドがありません");
                 throw new InvalidOperationException("Joypad not found");
             }
 
-            Joypad.JOYERR error = _pad.GetPosEx(PAD_NUM);
-            Joypad.JOYINFOEX ex = _pad.JoyInfoEx;
-
-            if(error != Joypad.JOYERR.NOERROR)
+            try
             {
-                throw new Exception("Joypad connection error : " + error.ToString());
+                return _pad.GetJoy();
             }
-
-            return _pad;
+            catch
+            {
+                IsEnabled = false;
+                throw;
+            }
         }
 
 
@@ -108,17 +114,29 @@ namespace ABU2021_ControlAndDebug.Models
         {
             if (_isExisted && IsDebug)
             {
-                _log.WiteDebugMsg(" Button:" + GetPad().JoyInfoEx.dwButtons.ToString("X8"));
-                _log.WiteDebugMsg(" X pos:" + GetPad().JoyInfoEx.dwXpos.ToString());
-                _log.WiteDebugMsg(" Y pos:" + GetPad().JoyInfoEx.dwYpos.ToString());
-                _log.WiteDebugMsg(" Z pos:" + GetPad().JoyInfoEx.dwZpos.ToString());
-                _log.WiteDebugMsg(" X rot:" + GetPad().JoyInfoEx.dwXrot.ToString());
-                _log.WiteDebugMsg(" Y rot:" + GetPad().JoyInfoEx.dwYrot.ToString());
-                _log.WiteDebugMsg(" Z rot:" + GetPad().JoyInfoEx.dwZrot.ToString());
-                _log.WiteDebugMsg(" Flag:" + GetPad().JoyInfoEx.dwFlags.ToString());
-                _log.WiteDebugMsg(" Reserrved1:" + GetPad().JoyInfoEx.dwReserved1.ToString());
-                _log.WiteDebugMsg(" Reserrved2:" + GetPad().JoyInfoEx.dwReserved2.ToString());
-                _log.WiteLine("");
+                try
+                {
+                    var pad = GetPad();
+                    BitArray bit = new BitArray(pad.Buttons);
+                    int[] button = new int[bit.Count / 32];
+                    bit.CopyTo(button, 0);
+
+                    _log.WiteDebugMsg(" Button:" + button[0].ToString("X8"));
+                    _log.WiteDebugMsg(" X pos:" + pad.X.ToString());
+                    _log.WiteDebugMsg(" Y pos:" + pad.Y.ToString());
+                    _log.WiteDebugMsg(" Z pos:" + pad.Z.ToString());
+                    _log.WiteDebugMsg(" X rot:" + pad.RotationX.ToString());
+                    _log.WiteDebugMsg(" Y rot:" + pad.RotationY.ToString());
+                    _log.WiteDebugMsg(" Z rot:" + pad.RotationZ.ToString());
+                    _log.WiteDebugMsg(" POV:" + pad.PointOfViewControllers.ToString());
+                    _log.WiteLine("");
+                }
+                catch(Exception ex)
+                {
+                    IsEnabled = false;
+                    _log.WiteErrorMsg("ジョイパッドをロストしました");
+                    Trace.WriteLine("Joypad lost. -> " + ex.ToString() + " : " + ex.Message);
+                }
             }
         }
     }

@@ -77,12 +77,11 @@
                 <MenuItem Header="接続(_C)" DockPanel.Dock="Left">
                     <MenuItem Header="切断(_D)" IsEnabled="{Binding IsEnableDissconnect}" Command="{Binding Disconnect_Click}"/>
                     <Separator/>
-                    <MenuItem Header="TR0-ROS(Wifi)" IsCheckable="True" IsEnabled="{Binding IsEnableConnect}" IsChecked="{Binding IsCheckedRosWifi}" Command="{Binding ConnectTr0RosWifi_Click}"/>
-                    <MenuItem Header="TR1-ROS(Wifi)(_T)" IsCheckable="True" IsEnabled="False" IsChecked="{Binding IsCheckedRosWifi}" Command="{Binding ConnectTr1RosWifi_Click}"/>
+                    <MenuItem Header="TR-ROS(Wifi)(_T)" IsCheckable="True" IsEnabled="{Binding IsEnableConnect}" IsChecked="{Binding IsCheckedRosWifi}" Command="{Binding ConnectTrRosWifi_Click}"/>
                     <MenuItem Header="DR-ROS(Wifi)(_D)" IsCheckable="True" IsEnabled="False" IsChecked="{Binding IsCheckedRosWifi}" Command="{Binding ConnectDrRosWifi_Click}"/>
                     <MenuItem Header="STM(USB)(_U)" IsCheckable="True" IsEnabled="{Binding IsEnableConnect}" IsChecked="{Binding IsCheckedStmUsb}" Command="{Binding ConnectStmUsb_Click}"/>
                     <Separator/>
-                    <MenuItem Header="接続テスト(_C)" IsCheckable="True" IsEnabled="{Binding IsEnableConnect}" IsChecked="{Binding IsCheckedStmUsb}" Command="{Binding ConnectStmUsb_Click}"/>
+                    <MenuItem Header="接続テスト(_G)" IsCheckable="True" IsEnabled="{Binding IsEnableConnect}" IsChecked="{Binding IsCheckedStmUsb}" Command="{Binding ConnectStmUsb_Click}"/>
                     <Separator/>
                     <MenuItem Header="ジョイパッド(_J)" IsCheckable="True" IsChecked="{Binding IsCheckedJoypad}" Command="{Binding ActiveJoypad_Click}"/>
                 </MenuItem>
@@ -222,9 +221,9 @@
                 <TabItem Header="無効">
 
                 </TabItem>
-                <TabItem Header="TR0" IsEnabled="{Binding IsEnabed, Mode=OneWay}">
+                <TabItem Header="TR" IsEnabled="{Binding IsEnabed, Mode=OneWay}">
                     <TabItem.DataContext>
-                        <vmodel:ControlTabTR0/>
+                        <vmodel:ControlTabTR/>
                     </TabItem.DataContext>
                     <DockPanel IsEnabled="{Binding IsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=TabItem}}">
                         <GroupBox DockPanel.Dock="Top" Header="ステータス">
@@ -240,7 +239,7 @@
                                     <ColumnDefinition Width="2*"/>
                                     <ColumnDefinition Width="1*"/>
                                 </Grid.ColumnDefinitions>
-                                
+
                                 <TextBlock 
                                     Text="回収機構展開"
                                     Grid.Row="0"
@@ -339,7 +338,7 @@
                                         Grid.Row="0"
                                         Grid.Column="3"
                                         Margin="2"/>
-                                    
+
                                     <TextBlock 
                                         Text="射出速度"
                                         Grid.Row="1"
@@ -391,9 +390,6 @@
                         </GroupBox>
 
                     </DockPanel>
-                </TabItem>
-                <TabItem Header="TR1" IsEnabled="False">
-
                 </TabItem>
                 <TabItem Header="DR" IsEnabled="False">
 

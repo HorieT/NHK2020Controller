@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MVVMLib;
+using SharpDX.DirectInput;
 
 /// <summary>
 /// 通信インターフェースモデル
@@ -24,7 +26,7 @@ namespace ABU2021_ControlAndDebug.Models
         private JoypadHandl _joypad;
         private Timer _sendMsgTimer;
         private Core.ComDevice _comDevice;
-        private Core.SendDataMsg _sendMsgJoy = new Core.SendDataMsg(Core.SendDataMsg.HeaderType.JOY, new JoypadControl.Joypad.JOYINFOEX());
+        private Core.SendDataMsg _sendMsgJoy = new Core.SendDataMsg(Core.SendDataMsg.HeaderType.JOY, new JoystickState());
         private SynchronizationContext _mainContext;
 
         #region Singleton instance
@@ -148,9 +150,17 @@ namespace ABU2021_ControlAndDebug.Models
         }
         public void Disconnect()
         {
+            
             if (!IsConnected) return;// throw new InvalidOperationException("Non connected");
-            _sendMsgTimer.Change(Timeout.Infinite, Timeout.Infinite);
-            _sendMsgTimer.Dispose();
+            try
+            {
+                _sendMsgTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+                _sendMsgTimer.Dispose();
+            }
+            catch(ObjectDisposedException)
+            {
+                Trace.WriteLine("Already diposed \"_sendMsgTimer\".");
+            }
 
             try
             {
@@ -207,14 +217,20 @@ namespace ABU2021_ControlAndDebug.Models
                     try
                     {
                         //_sendMsgJoy.Reset(Core.SendDataMsg.HeaderType.JOY, _joypad.GetPad().JoyInfoEx);
-                        var data = new Core.SendDataMsg(Core.SendDataMsg.HeaderType.JOY, _joypad.GetPad().JoyInfoEx);
-                        await _comDevice?.SendMsgAsync(data);
-                        _log.WiteDebugMsg(data.ConvString());
+
+                        if (_comDevice != null)
+                        {
+                            var data = new Core.SendDataMsg(Core.SendDataMsg.HeaderType.JOY, _joypad.GetPad());
+
+                            await (_comDevice?.SendMsgAsync(data) ?? Task.Delay(0));//ホントはnullのとき返したいけどなんか面倒なのでとりあえず
+                            _log.WiteDebugMsg(data.ConvString());
+                        }
                     }
                     catch
                     {
                         _log.WiteDebugMsg("送信失敗");
                         _mainContext.Post(_ => Disconnect(), null);
+                        _log.WiteErrorMsg("切断されました");
                     }
                 });
             }

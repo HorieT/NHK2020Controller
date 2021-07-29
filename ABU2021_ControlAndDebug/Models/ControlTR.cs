@@ -15,7 +15,7 @@ namespace ABU2021_ControlAndDebug.Models
     /// プロパティの変更権を雑に外側に握らせてるのが気に食わないけど
     /// いい方法が思いつかなかった
     /// </summary>
-    class ControlTR0 : NotifyPropertyChanged
+    class ControlTR : NotifyPropertyChanged
     {
         public static readonly double INJECT_SPEED_MAX = 7.5;//m/s
         public static readonly double INJECT_ANGLE_MAX = 47.0;//deg
@@ -42,15 +42,15 @@ namespace ABU2021_ControlAndDebug.Models
 
 
         #region Singleton instance
-        private static ControlTR0 _instance;
-        public static ControlTR0 GetInstance
+        private static ControlTR _instance;
+        public static ControlTR GetInstance
         {
             get
             {
-                return _instance ?? (_instance = new ControlTR0());
+                return _instance ?? (_instance = new ControlTR());
             }
         }
-        private ControlTR0()
+        private ControlTR()
         {
             _log = OutputLog.GetInstance;
             _communicator = Communicator.GetInstance;
@@ -184,7 +184,18 @@ namespace ABU2021_ControlAndDebug.Models
             try
             {
                 using (StreamWriter stream = new StreamWriter(fileName, false))
-                {/*
+                {
+                    System.Reflection.FieldInfo[] fieldInfos = typeof(DebugData).GetFields();
+
+                    foreach(var fieldInfo in fieldInfos)
+                    {
+                        stream.Write(fieldInfo.Name);
+                        stream.Write(", ");
+                    }
+                    stream.WriteLine();
+
+
+                    /*
                     stream.WriteLine("!option");
                     stream.Write("<point ");
                     stream.Write("size=\"" + _userDotList.Size.ToString(CultureInfo.GetCultureInfo("ja-JP")) + "\" ");
@@ -285,7 +296,7 @@ namespace ABU2021_ControlAndDebug.Models
         {
             if(e.PropertyName == nameof(_communicator.IsConnected))
             {
-                IsEnabaled = _communicator.Device == Core.ControlType.Device.TR0 && _communicator.IsConnected;
+                IsEnabaled = _communicator.Device == Core.ControlType.Device.TR && _communicator.IsConnected;
                 Task.Run(async () => { await ReadMsg(); });
             }
         }

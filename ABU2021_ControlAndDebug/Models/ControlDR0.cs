@@ -104,7 +104,7 @@ namespace ABU2021_ControlAndDebug.Models
         {
             if (e.PropertyName == nameof(_communicator.IsConnected))
             {
-                IsEnabaled = _communicator.Device == Core.ControlType.Device.DR0 && _communicator.IsConnected;
+                IsEnabaled = _communicator.Device == Core.ControlType.Device.DR && _communicator.IsConnected;
                 Task.Run(async () => { await ReadMsg(); });
             }
         }

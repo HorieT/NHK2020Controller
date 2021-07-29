@@ -12,14 +12,14 @@ using System.Windows.Media;
 
 namespace ABU2021_ControlAndDebug.ViewModels
 {
-    class ControlTabTR0 : ViewModel
+    class ControlTabTR : ViewModel
     {
         private double _injectSpeed = 1.00;
         private double _injectAngle = 45.00;
 
 
         #region Model
-        public Models.ControlTR0 TR { get; private set; }
+        public Models.ControlTR TR { get; private set; }
         private Models.OutputLog _log;
         private Models.DebugSate _debugSate;
         #endregion
@@ -151,7 +151,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
                                 InjectSpeedText = _injectSpeed.ToString("F2");
                                 return;
                             }
-                            if(speed > 0.0 && speed < Models.ControlTR0.INJECT_SPEED_MAX)
+                            if(speed > 0.0 && speed < Models.ControlTR.INJECT_SPEED_MAX)
                             {
                                 _injectSpeed = speed;
                                 FallPredictionText = TR.GetArrowFallPos(0, _injectSpeed, _injectAngle).ToString("F2");
@@ -196,7 +196,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
                                 InjectAngleText = _injectAngle.ToString("F2");
                                 return;
                             }
-                            if (angle > Models.ControlTR0.INJECT_ANGLE_MIN && angle < Models.ControlTR0.INJECT_ANGLE_MAX)
+                            if (angle > Models.ControlTR.INJECT_ANGLE_MIN && angle < Models.ControlTR.INJECT_ANGLE_MAX)
                             {
                                 _injectAngle = angle;
                                 FallPredictionText = TR.GetArrowFallPos(0, _injectSpeed, _injectAngle).ToString("F2");
@@ -212,9 +212,9 @@ namespace ABU2021_ControlAndDebug.ViewModels
         #endregion
 
 
-        public ControlTabTR0()
+        public ControlTabTR()
         {
-            TR = Models.ControlTR0.GetInstance;
+            TR = Models.ControlTR.GetInstance;
             _log = Models.OutputLog.GetInstance;
             _debugSate = Models.DebugSate.GetInstance;
 
