@@ -97,7 +97,7 @@
     <Compile Include="Core\SendDataMsg.cs" />
     <Compile Include="DateTimeTraceListener.cs" />
     <Compile Include="Models\Communicator.cs" />
-    <Compile Include="Models\ControlDR0.cs" />
+    <Compile Include="Models\ControlDR.cs" />
     <Compile Include="Models\ControlMachineBase.cs" />
     <Compile Include="Models\ControlTR.cs" />
     <Compile Include="Core\ControlType.cs" />

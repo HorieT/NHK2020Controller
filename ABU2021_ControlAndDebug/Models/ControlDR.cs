@@ -8,22 +8,22 @@ using MVVMLib;
 
 namespace ABU2021_ControlAndDebug.Models
 {
-    class ControlDR0 : NotifyPropertyChanged
+    class ControlDR : NotifyPropertyChanged
     {
         private OutputLog _log;
         private Communicator _communicator;
         private DebugSate _debugSate;
 
         #region Singleton instance
-        private static ControlDR0 _instance;
-        public static ControlDR0 GetInstance
+        private static ControlDR _instance;
+        public static ControlDR GetInstance
         {
             get
             {
-                return _instance ?? (_instance = new ControlDR0());
+                return _instance ?? (_instance = new ControlDR());
             }
         }
-        private ControlDR0()
+        private ControlDR()
         {
             _log = OutputLog.GetInstance;
             _communicator = Communicator.GetInstance;

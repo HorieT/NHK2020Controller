@@ -26,7 +26,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
         public Models.OutputLog Log { get; private set; }
         public Models.MapProperty MapProperty { get; private set; }
         public Models.ControlTR TR{ get; private set; }
-        public Models.ControlDR0 DR { get; private set; }
+        public Models.ControlDR DR { get; private set; }
         public Models.Communicator Communicator { get; set; }
         #endregion
 
@@ -37,7 +37,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
             Log = Models.OutputLog.GetInstance;
             MapProperty = Models.MapProperty.GetInstance;
             TR = Models.ControlTR.GetInstance;
-            DR = Models.ControlDR0.GetInstance;
+            DR = Models.ControlDR.GetInstance;
             Communicator = Models.Communicator.GetInstance;
             #endregion
 

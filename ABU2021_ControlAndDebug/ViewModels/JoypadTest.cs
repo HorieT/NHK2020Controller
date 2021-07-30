@@ -282,8 +282,9 @@ namespace ABU2021_ControlAndDebug.ViewModels
                     _mainContext.Post(_ => {
                         _is_check_error = true;
                         _checkTimer.Change(Timeout.Infinite, Timeout.Infinite);
-                        MessageBox.Show("Joypadが認識できません", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
-                        //Application.Current.MainWindow.Close();
+                        MessageBox.Show("Joypadが認識できません", "エラー", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK, MessageBoxOptions.DefaultDesktopOnly);
+                        Application.Current.Windows.OfType<Window>().SingleOrDefault(w => w.IsActive).Close();//??????????????????????
+                        
                     }, null);
 
                     Trace.WriteLine("Joypad get state error. -> " + ex.ToString() + " : " + ex.Message);
