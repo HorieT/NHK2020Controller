@@ -363,11 +363,11 @@ namespace ABU2021_ControlAndDebug.ViewModels
         #region Method
         private Point RealToCanvas(Point realPoint)
         {
-            return new Point(realPoint.X * MapScale.X, MapHeight - realPoint.Y * MapScale.Y);
+            return new Point(realPoint.X * MapScale.X + MapWidth * 0.5, MapHeight - realPoint.Y * MapScale.Y - MapHeight * 0.5);
         }
         private Point RealToCanvas(Vector realPoint)
         {
-            return new Point(realPoint.X * MapScale.X, MapHeight - realPoint.Y * MapScale.Y);
+            return new Point(realPoint.X * MapScale.X + MapWidth * 0.5, MapHeight - realPoint.Y * MapScale.Y - MapHeight * 0.5);
         }
 
 

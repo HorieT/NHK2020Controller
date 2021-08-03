@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MVVMLib;
+using NativeWifi;
 using SharpDX.DirectInput;
 
 /// <summary>
@@ -28,6 +29,8 @@ namespace ABU2021_ControlAndDebug.Models
         private Core.ComDevice _comDevice;
         private Core.SendDataMsg _sendMsgJoy = new Core.SendDataMsg(Core.SendDataMsg.HeaderType.JOY, new JoystickState());
         private SynchronizationContext _mainContext;
+        private Timer _checkNetworkTimer;
+        private static readonly int checkNetworkPeriod = 2000;
 
         #region Singleton instance
         private static Communicator _instance;
@@ -43,6 +46,28 @@ namespace ABU2021_ControlAndDebug.Models
             _log = OutputLog.GetInstance;
             _joypad = JoypadHandl.GetInstance;
             _mainContext = SynchronizationContext.Current;
+            _checkNetworkTimer = new Timer(
+                _ => {
+                    try
+                        {
+                        var wlan = new WlanClient();
+                        var active = wlan.Interfaces.Where(net => net.InterfaceState == Wlan.WlanInterfaceState.Connected);
+                        if (active.Count() != 0)
+                        {
+                            NetworkName =
+                                active.Aggregate("", (name, net) => name + System.Text.Encoding.ASCII.GetString(net.CurrentConnection.wlanAssociationAttributes.dot11Ssid.SSID) + ",");
+                        }
+                        else
+                        {
+                            NetworkName = "None";
+                        }
+                    }
+                    catch
+                    {
+                        NetworkName = "None";
+                    }
+                }, 
+                null, 0, checkNetworkPeriod);
         }
         ~Communicator()
         {
@@ -55,6 +80,7 @@ namespace ABU2021_ControlAndDebug.Models
         #region Property
         private Core.ControlType.Device _machine = Core.ControlType.Device.Etc;
         private int _sendMsgPeriodMs = 50;
+        private string _networkName;
 
         public Core.ControlType.Device Device
         {
@@ -70,6 +96,11 @@ namespace ABU2021_ControlAndDebug.Models
                 if (SetProperty(ref _sendMsgPeriodMs, value))
                     _sendMsgTimer.Change(0, _sendMsgPeriodMs);
             }
+        }
+        public string NetworkName
+        {
+            get => _networkName;
+            private set { SetProperty(ref _networkName, value); }
         }
 
         public string ConnectedDviseName

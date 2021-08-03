@@ -49,6 +49,15 @@ namespace ABU2021_ControlAndDebug.Core
         }
 
 
+        public enum Pot : int
+        {
+            _1Left  = 0,
+            _1Right = 1,
+            _2Front = 2,
+            _2Back  = 3,
+            _3      = 4,
+        }
+
         public static Device ToDevice(UsbBoardPid pid)
         {
             switch (pid)

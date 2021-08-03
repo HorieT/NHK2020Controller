@@ -20,14 +20,15 @@ namespace ABU2021_ControlAndDebug.Core
         {
             //bool
             E_STOP = 0x01,
-            COLLECT,
-            I_LOAD_END,
-            INJECT_END,
             //byte
             //float
-            I_ANGLE = 0x80,
+            I_ANGLE = 0x40,
             //sp
-            POSITION = 0xE0,
+            M_POS = 0x80,
+            POT_POS,
+            INJECT_Q,
+            M_STATE,
+            M_SEQUENCE,
             //debug
             DEBUG_POS = 0xF0
         }
@@ -35,11 +36,12 @@ namespace ABU2021_ControlAndDebug.Core
         public static readonly Dictionary<HeaderType, Type> DataType = new Dictionary<HeaderType, Type>
         {
             {HeaderType.E_STOP, typeof(bool)},
-            {HeaderType.COLLECT, typeof(bool)},
-            {HeaderType.I_LOAD_END,typeof(bool)},
-            {HeaderType.INJECT_END, typeof(bool)},
             {HeaderType.I_ANGLE, typeof(float)},
-            {HeaderType.POSITION, typeof((Vector, double))},
+            {HeaderType.M_POS, typeof((Vector, double, int))},
+            //{HeaderType.POT_POS, typeof((Vector, int))},
+            {HeaderType.INJECT_Q, typeof(int[])},
+            {HeaderType.M_STATE, typeof(string[])},
+            {HeaderType.M_SEQUENCE, typeof(string[])},
             {HeaderType.DEBUG_POS, typeof((Vector, double, Vector, double))},
         };
         #endregion
@@ -61,7 +63,15 @@ namespace ABU2021_ControlAndDebug.Core
             {
                 string msgData = split[1];
                 //型変換 switchステートは使えない
-                if (DataType[Header] == typeof(bool))
+                if (DataType[Header] == typeof(string))
+                {
+                    Data = msgData;
+                }
+                else if (DataType[Header] == typeof(string[]))
+                {
+                    Data = msgData;
+                }
+                else if (DataType[Header] == typeof(bool))
                 {
                     Data = bool.Parse(msgData);
                 }
@@ -93,7 +103,15 @@ namespace ABU2021_ControlAndDebug.Core
                 {
                     Data = float.Parse(msgData);
                 }
-                else if (DataType[Header] == typeof((Vector, double)))
+                else if (DataType[Header] == typeof(int[]))
+                {
+                    Data = ToIntArray(msgData);
+                }
+                else if (DataType[Header] == typeof((Vector, int)))
+                {
+                    Data = ToPotPosition(msgData);
+                }
+                else if (DataType[Header] == typeof((Vector, double, int)))
                 {
                     Data = ToPosition(msgData);
                 }
@@ -108,7 +126,7 @@ namespace ABU2021_ControlAndDebug.Core
             }
             catch
             {
-                throw new ArgumentException("Data not found");
+                throw new ArgumentException("Data not found : Header " + Header.ToString());
             }
         }
         public ReceiveDataMsg(IReadOnlyList<byte> msg)
@@ -182,27 +200,28 @@ namespace ABU2021_ControlAndDebug.Core
 
 
         #region Method
-        private static (Vector, double) ToPosition(String msgData)
+        private static (Vector, double, int) ToPosition(String msgData)
         {
             var split = Regex.Split(msgData, ",");
             try
             {
                 Vector vec = new Vector(double.Parse(split[0]), double.Parse(split[1]));
                 double rad = double.Parse(split[2]);
-                return (vec, rad);
+                int num = split.Count() > 3 ? int.Parse(split[3]) : 0;
+                return (vec, rad, num);
             }
             catch
             {
                 throw new ArgumentException();
             }
         }
-        private static (Vector, double) ToPosition(IReadOnlyList<byte> msg, int offset)
+        private static (Vector, double, int) ToPosition(IReadOnlyList<byte> msg, int offset)
         {
             if (msg.Count != 12 + offset) throw new ArgumentException();
             var array = msg.ToArray();
             Vector vec = new Vector(BitConverter.ToSingle(array, offset), BitConverter.ToSingle(array, offset+4));
             double rad = BitConverter.ToSingle(array, offset+8);
-            return (vec, rad);
+            return (vec, rad, 0);
         }
         private static (Vector, double, Vector, double) ToDebugPos(String msgData)
         {
@@ -230,6 +249,37 @@ namespace ABU2021_ControlAndDebug.Core
             double rad2 = BitConverter.ToSingle(array, offset + 20);
             return (vec1, rad1, vec2, rad2);
         }
+
+        #region ROS only
+        private static (Vector, int) ToPotPosition(String msgData)
+        {
+            var split = Regex.Split(msgData, ",");
+            try
+            {
+                Vector vec = new Vector(double.Parse(split[0]), double.Parse(split[1]));
+                int num = int.Parse(split[2]);
+                return (vec, num);
+            }
+            catch
+            {
+                throw new ArgumentException();
+            }
+        }
+        private static int[] ToIntArray(String msgData)
+        {
+            var split = Regex.Split(msgData, ",");
+            try
+            {
+                int test;
+                if (split.Count() == 1 &&  !int.TryParse(split[0], out test)) return new int[0];
+                return split.Select(sp => int.Parse(sp)).ToArray(); ;
+            }
+            catch
+            {
+                throw new ArgumentException();
+            }
+        }
+        #endregion
         #endregion
     }
 }

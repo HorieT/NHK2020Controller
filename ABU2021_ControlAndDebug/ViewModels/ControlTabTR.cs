@@ -9,13 +9,14 @@ using MVVMLib;
 using System.Windows.Controls;
 using System.Windows;
 using System.Windows.Media;
+using System.Diagnostics;
 
 namespace ABU2021_ControlAndDebug.ViewModels
 {
     class ControlTabTR : ViewModel
     {
         private double _injectSpeed = 1.00;
-        private double _injectAngle = 45.00;
+        private readonly double _injectAngle = 45.00;
 
 
         #region Model
@@ -27,8 +28,6 @@ namespace ABU2021_ControlAndDebug.ViewModels
         #region Property
         private bool _isEnabled;
         private string _injectSpeedText = "1.00";
-        private string _injectAngleText = "27.00";
-        private string _injectAngleNowText = "27.00";
         private string _fallPredictionText;
 
 
@@ -41,16 +40,6 @@ namespace ABU2021_ControlAndDebug.ViewModels
         {
             get => _injectSpeedText;
             set { SetProperty(ref _injectSpeedText, value); }
-        }
-        public string InjectAngleText
-        {
-            get => _injectAngleText;
-            set { SetProperty(ref _injectAngleText, value); }
-        }
-        public string InjectAngleNowText
-        {
-            get => _injectAngleNowText;
-            set { SetProperty(ref _injectAngleNowText, value); }
         }
         public string FallPredictionText
         {
@@ -66,8 +55,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
         private ICommand _inputDataTextBox_PreviewKeyDown;
         private ICommand _injectTextBox_PreviewTextInput;
         private ICommand _injectTextBox_LostFocus;
-        private ICommand _angleTextBox_PreviewTextInput;
-        private ICommand _angleTextBox_LostFocus;
+        private ICommand _injectButton_Click;
         public ICommand NoPasteTextBox_PreviewExecuted
         {
             get
@@ -164,47 +152,22 @@ namespace ABU2021_ControlAndDebug.ViewModels
                         }));
             }
         }
-        public ICommand AngleTextBox_PreviewTextInput
+        public ICommand InjectButton_Click
         {
             get
             {
-                return _angleTextBox_PreviewTextInput ??
-                    (_angleTextBox_PreviewTextInput = CreateCommand(
-                        (TextCompositionEventArgs e) => {
-                            var box = e.Source as TextBox;
-                            if (box == null) return;
-                            e.Handled = new Regex(@"[^0-9]").IsMatch(e.Text) ?
-                            (new Regex(@"\D").IsMatch(box.Text) || new Regex(@"[^.]").IsMatch(e.Text)) : false;
-                        }));
-            }
-        }
-        public ICommand AngleTextBox_LostFocus
-        {
-            get
-            {
-                return _angleTextBox_LostFocus ??
-                    (_angleTextBox_LostFocus = CreateCommand(
-                        (RoutedEventArgs e) => {
-                            float angle;
+                return _injectButton_Click ??
+                    (_injectButton_Click = CreateCommand(
+                        (object sender) =>
+                        {
                             try
                             {
-                                angle = float.Parse(InjectAngleText);
+                                TR.Inject(double.Parse(InjectSpeedText));
                             }
-                            catch
+                            catch(Exception ex)
                             {
-                                _log.WiteLine("入力が数値ではありません");
-                                InjectAngleText = _injectAngle.ToString("F2");
-                                return;
-                            }
-                            if (angle > Models.ControlTR.INJECT_ANGLE_MIN && angle < Models.ControlTR.INJECT_ANGLE_MAX)
-                            {
-                                _injectAngle = angle;
-                                FallPredictionText = TR.GetArrowFallPos(0, _injectSpeed, _injectAngle).ToString("F2");
-                            }
-                            else
-                            {
-                                _log.WiteLine("入力が範囲外です");
-                                InjectAngleText = _injectAngle.ToString("F2");
+                                _log.WiteErrorMsg("Inject error.");
+                                Trace.WriteLine("Inject error. ->" + ex.Message);
                             }
                         }));
             }
@@ -238,9 +201,6 @@ namespace ABU2021_ControlAndDebug.ViewModels
             if (e.PropertyName == nameof(TR.IsEnabaled))
             {
                 IsEnabed = _debugSate.IsUnlockUI || TR.IsEnabaled;
-            }
-            else if (e.PropertyName == nameof(TR.InjectAngleNow)){
-                InjectAngleNowText = TR.InjectAngleNow.ToString("F2");
             }
         }
         #endregion

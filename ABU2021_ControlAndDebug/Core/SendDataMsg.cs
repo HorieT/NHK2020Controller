@@ -19,23 +19,25 @@ namespace ABU2021_ControlAndDebug.Core
         {
             //bool
             E_STOP = 0x01,
-            COLLECT,
             //byte
             I_LOAD = 0x20,
             //float
-            INJECT = 0x80,
-            I_ANGLE,
+            INJECT = 0x40,
             //sp
-            JOY = 0xF0
+            JOY = 0x80,
+            INJECT_POT,
+            INJECT_Q_INS,
+            INJECT_Q_DEL,
         }
         public static readonly Dictionary<HeaderType, Type> DataType = new Dictionary<HeaderType, Type>
         {
-            {HeaderType.E_STOP, typeof(bool)},
-            {HeaderType.COLLECT, typeof(bool)},
-            {HeaderType.I_LOAD,typeof(byte)},
-            {HeaderType.INJECT, typeof(float)},
-            {HeaderType.I_ANGLE, typeof(float)},
-            {HeaderType.JOY, typeof(JoystickState)},
+            {HeaderType.E_STOP,         typeof(bool)},
+            {HeaderType.I_LOAD,         typeof(byte)},
+            {HeaderType.INJECT,         typeof(float)},
+            {HeaderType.JOY,            typeof(JoystickState)},
+            {HeaderType.INJECT_POT,     typeof(int)},
+            {HeaderType.INJECT_Q_INS,   typeof(int[])},
+            {HeaderType.INJECT_Q_DEL,   typeof(int)},
         };
         #endregion
 
@@ -78,6 +80,10 @@ namespace ABU2021_ControlAndDebug.Core
             else if(Data.GetType().IsPrimitive)//その他プリミティブ型
             {
                 data = Data.ToString();
+            }
+            else if (Data.GetType().IsArray)
+            {
+                data = string.Join(", ", Data);
             }
             else//自己定義型(複数データ列)
             {

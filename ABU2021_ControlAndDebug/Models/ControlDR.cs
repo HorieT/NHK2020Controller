@@ -85,7 +85,7 @@ namespace ABU2021_ControlAndDebug.Models
                 {
                     switch (msg.Header)
                     {
-                        case Core.ReceiveDataMsg.HeaderType.POSITION:
+                        case Core.ReceiveDataMsg.HeaderType.M_POS:
                             Positon = ((ValueTuple<Vector, double>)msg.Data).Item1;
                             PositonRot = ((ValueTuple<Vector, double>)msg.Data).Item2;
                             break;

@@ -86,8 +86,9 @@
                     <MenuItem Header="ジョイパッド(_J)" IsCheckable="True" IsChecked="{Binding IsCheckedJoypad}" Command="{Binding ActiveJoypad_Click}"/>
                 </MenuItem>
 
-                <MenuItem Header="{Binding ConnectedText}" DockPanel.Dock="Right" HorizontalAlignment="Right" Focusable="False" IsManipulationEnabled="False" IsEnabled="False"/>
                 <MenuItem Header="{Binding ConnectedJoypadText}" DockPanel.Dock="Right" HorizontalAlignment="Right" Focusable="False" IsManipulationEnabled="False" IsEnabled="False"/>
+                <MenuItem Header="{Binding ConnectedText}" DockPanel.Dock="Right" HorizontalAlignment="Right" Focusable="False" IsManipulationEnabled="False" IsEnabled="False"/>
+                <MenuItem Header="{Binding Communicator.NetworkName}" DockPanel.Dock="Right" HorizontalAlignment="Right" Focusable="False" IsManipulationEnabled="False" IsEnabled="False"/>
             </Menu>
 
 
@@ -217,7 +218,7 @@
             </TabControl>
 
 
-            <TabControl Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" Margin="5, 0, 0, 0">
+            <TabControl Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" Margin="5, 0, 0, 0"  FontSize="16">
                 <TabItem Header="無効">
 
                 </TabItem>
@@ -232,16 +233,17 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="0.5*"/>
                                     <ColumnDefinition Width="2*"/>
                                     <ColumnDefinition Width="2*"/>
-                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="0.5*"/>
                                 </Grid.ColumnDefinitions>
 
                                 <TextBlock 
-                                    Text="回収機構展開"
+                                    Text="非常停止"
                                     Grid.Row="0"
                                     Grid.Column="0"
                                     Grid.ColumnSpan="2"
@@ -253,11 +255,11 @@
                                     Grid.Column="2"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
-                                    IsChecked="{Binding TR.IsOpenedRecovery, Mode=OneWay}"
                                     IsEnabled="False"/>
+                                <!--IsChecked="{Binding TR.IsOpenedRecovery, Mode=OneWay}"-->
 
                                 <TextBlock 
-                                    Text="射出角度"
+                                    Text="ステータス"
                                     Grid.Row="1"
                                     Grid.Column="0"
                                     Grid.ColumnSpan="2"
@@ -270,20 +272,46 @@
                                     Margin="2"
                                     IsReadOnly="True"
                                     TextAlignment="Right"
-                                    Text="{Binding InjectAngleNowText, Mode=OneWay}"/>
+                                    Text="{Binding TR.MachineState, Mode=OneWay}"/>
                                 <TextBlock 
-                                    Text="deg"
-                                    Grid.Row="1"
-                                    Grid.Column="3"
-                                    Margin="2"/>
+                                    Text="シーケンス"
+                                    Grid.Row="2"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    Margin="2"
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Right"/>
+                                <TextBox 
+                                    Grid.Row="2"
+                                    Grid.Column="2"
+                                    Margin="2"
+                                    IsReadOnly="True"
+                                    TextAlignment="Right"
+                                    Text="{Binding TR.MachineSequence, Mode=OneWay}"/>
                             </Grid>
                         </GroupBox>
 
-
+                        <GroupBox DockPanel.Dock="Bottom" Header="射出キュー">
+                            <DataGrid 
+                                ItemsSource="{Binding TR.PotsQueue}"
+                                AutoGenerateColumns="False"
+                                CanUserResizeRows="False" 
+                                CanUserAddRows="False" 
+                                IsSynchronizedWithCurrentItem="True" 
+                                CanUserSortColumns="False"
+                                CanUserResizeColumns="False">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn 
+                                        Header="Num" Binding="{Binding Path=.}" 
+                                        Width="1*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>   
+                        </GroupBox>
+                        
                         <GroupBox DockPanel.Dock="Bottom" Header="コントロール">
                             <DockPanel>
                                 <!--ボタン入力類-->
-                                <Grid DockPanel.Dock="Bottom" Margin="5">
+                                <Grid DockPanel.Dock="Top" Margin="5">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
@@ -296,8 +324,10 @@
                                         Content="発射"
                                         Grid.Row="0"
                                         Grid.Column="0"
+                                        Grid.ColumnSpan="2"
                                         Margin="5"
-                                        IsEnabled="{Binding TR.IsMoveEndInject}"/>
+                                        Height="25"
+                                        Command="{Binding InjectButton_Click}"/>
                                 </Grid>
 
                                 <!--テキスト入力類-->
@@ -317,29 +347,6 @@
 
 
                                     <TextBlock 
-                                        Text="射出角度"
-                                        Grid.Row="0"
-                                        Grid.Column="0"
-                                        Grid.ColumnSpan="2"
-                                        Margin="2"
-                                        VerticalAlignment="Center"
-                                        HorizontalAlignment="Right"/>
-                                    <TextBox 
-                                        Grid.Row="0"
-                                        Grid.Column="2"
-                                        Margin="2"
-                                        TextAlignment="Right"
-                                        Text="{Binding InjectAngleText}"
-                                        CommandManager.PreviewExecuted="{mvvm:InvokeCommand NoPasteTextBox_PreviewExecuted}"
-                                        PreviewTextInput="{mvvm:InvokeCommand AngleTextBox_PreviewTextInput}"
-                                        LostFocus="{mvvm:InvokeCommand AngleTextBox_LostFocus}"/>
-                                    <TextBlock 
-                                        Text="deg"
-                                        Grid.Row="0"
-                                        Grid.Column="3"
-                                        Margin="2"/>
-
-                                    <TextBlock 
                                         Text="射出速度"
                                         Grid.Row="1"
                                         Grid.Column="0"
@@ -351,6 +358,7 @@
                                         Grid.Row="1" 
                                         Grid.Column="2"
                                         Margin="2"
+                                        FontSize="20"
                                         TextAlignment="Right"
                                         Text="{Binding InjectSpeedText}"
                                         CommandManager.PreviewExecuted="{mvvm:InvokeCommand NoPasteTextBox_PreviewExecuted}"
@@ -361,10 +369,11 @@
                                         Text="m/s"
                                         Grid.Row="1"
                                         Grid.Column="3"
+                                        VerticalAlignment="Bottom"
                                         Margin="2"/>
 
                                     <TextBlock 
-                                        Text="着弾予測(床面)"
+                                        Text="着弾予測(床)"
                                         Grid.Row="2"
                                         Grid.Column="0"
                                         Grid.ColumnSpan="2"
@@ -375,6 +384,7 @@
                                         Grid.Row="2"
                                         Grid.Column="2"
                                         Margin="2"
+                                        FontSize="20"
                                         TextAlignment="Right"
                                         IsReadOnly="True"
                                         Text="{Binding FallPredictionText}"/>
@@ -382,12 +392,14 @@
                                         Text="m"
                                         Grid.Row="2"
                                         Grid.Column="3"
+                                        VerticalAlignment="Bottom"
                                         Margin="2"/>
 
 
                                 </Grid>
                             </DockPanel>
                         </GroupBox>
+                        
 
                     </DockPanel>
                 </TabItem>
@@ -409,7 +421,7 @@
                         VerticalScrollBarVisibility="Auto"
                         IsReadOnly="True"
                         IsReadOnlyCaretVisible="True"
-                        FontSize="10" 
+                        FontSize="8" 
                         Text="{Binding Log.Text}"
                         TextChanged="{mvvm:InvokeCommand Log_TextChanged}"/>
                 </TabItem>

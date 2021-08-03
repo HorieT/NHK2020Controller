@@ -49,8 +49,8 @@ namespace ABU2021_ControlAndDebug.Core
             {
                 try
                 {
-                    var _client = new System.Net.Sockets.TcpClient(ControlType.TCP_IP_ADDRESS, (int)Port);
-                    //var _client = new System.Net.Sockets.TcpClient(GetMyIpaddress(), (int)Port);
+                    //var _client = new System.Net.Sockets.TcpClient(ControlType.TCP_IP_ADDRESS, (int)Port);
+                    var _client = new System.Net.Sockets.TcpClient(GetMyIpaddress(), (int)Port);
 
                     _wifiStream = _client.GetStream();
                     _wifiReader = new StreamReader(_wifiStream, Encoding.UTF8);
@@ -107,7 +107,7 @@ namespace ABU2021_ControlAndDebug.Core
             while (_isConencted)
             {
                 var data = await _wifiReader.ReadLineAsync();
-
+                //Trace.WriteLine("ReceiveDataMsg log. ->" + data);
                 try
                 {
                     return new ReceiveDataMsg(data);
