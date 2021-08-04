@@ -32,18 +32,6 @@ namespace ABU2021_ControlAndDebug.Core
             //debug
             DEBUG_POS = 0xF0
         }
-
-        public static readonly Dictionary<HeaderType, Type> DataType = new Dictionary<HeaderType, Type>
-        {
-            {HeaderType.E_STOP, typeof(bool)},
-            {HeaderType.I_ANGLE, typeof(float)},
-            {HeaderType.M_POS, typeof((Vector, double, int))},
-            //{HeaderType.POT_POS, typeof((Vector, int))},
-            {HeaderType.INJECT_Q, typeof(int[])},
-            {HeaderType.M_STATE, typeof(string[])},
-            {HeaderType.M_SEQUENCE, typeof(string[])},
-            {HeaderType.DEBUG_POS, typeof((Vector, double, Vector, double))},
-        };
         #endregion
 
         public ReceiveDataMsg(string msg)
@@ -63,65 +51,36 @@ namespace ABU2021_ControlAndDebug.Core
             {
                 string msgData = split[1];
                 //型変換 switchステートは使えない
-                if (DataType[Header] == typeof(string))
+                switch (Header)
                 {
-                    Data = msgData;
-                }
-                else if (DataType[Header] == typeof(string[]))
-                {
-                    Data = msgData;
-                }
-                else if (DataType[Header] == typeof(bool))
-                {
-                    Data = bool.Parse(msgData);
-                }
-                else if (DataType[Header] == typeof(byte))
-                {
-                    Data = byte.Parse(msgData);
-                }
-                else if (DataType[Header] == typeof(char))
-                {
-                    Data = char.Parse(msgData);
-                }
-                else if (DataType[Header] == typeof(ushort))
-                {
-                    Data = ushort.Parse(msgData);
-                }
-                else if (DataType[Header] == typeof(short))
-                {
-                    Data = short.Parse(msgData);
-                }
-                else if (DataType[Header] == typeof(uint))
-                {
-                    Data = uint.Parse(msgData);
-                }
-                else if (DataType[Header] == typeof(int))
-                {
-                    Data = int.Parse(msgData);
-                }
-                else if (DataType[Header] == typeof(float))
-                {
-                    Data = float.Parse(msgData);
-                }
-                else if (DataType[Header] == typeof(int[]))
-                {
-                    Data = ToIntArray(msgData);
-                }
-                else if (DataType[Header] == typeof((Vector, int)))
-                {
-                    Data = ToPotPosition(msgData);
-                }
-                else if (DataType[Header] == typeof((Vector, double, int)))
-                {
-                    Data = ToPosition(msgData);
-                }
-                else if (DataType[Header] == typeof((Vector, double, Vector, double)))
-                {
-                    Data = ToDebugPos(msgData);
-                }
-                else
-                {
-                    throw new NotImplementedException();
+                    case HeaderType.M_SEQUENCE:
+                    case HeaderType.M_STATE:
+                        //string,string[]
+                        Data = msgData;
+                        break;
+                    case HeaderType.E_STOP:
+                        //bool
+                        Data = bool.Parse(msgData);
+                        break;
+                    case HeaderType.I_ANGLE:
+                        Data = float.Parse(msgData);
+                        break;
+                    case HeaderType.INJECT_Q:
+                        //int[]
+                        Data = ToIntArray(msgData);
+                        break;
+                    case HeaderType.POT_POS:
+                        //double[]
+                        Data = ToDoubleArray(msgData);
+                        break;
+                    case HeaderType.M_POS:
+                        Data = ToPosition(msgData);
+                        break;
+                    case HeaderType.DEBUG_POS:
+                        Data = ToDebugPos(msgData);
+                        break;
+                    default:
+                        throw new NotImplementedException();
                 }
             }
             catch
@@ -140,49 +99,27 @@ namespace ABU2021_ControlAndDebug.Core
             try
             {
                 //型変換 switchステートは使えない
-                if (DataType[Header] == typeof(bool))
+                switch (Header)
                 {
-                    Data = BitConverter.ToBoolean(msg.ToArray(), 1);
-                }
-                else if (DataType[Header] == typeof(byte))
-                {
-                    Data = msg[1];
-                }
-                else if (DataType[Header] == typeof(char))
-                {
-                    Data = BitConverter.ToChar(msg.ToArray(), 1);
-                }
-                else if (DataType[Header] == typeof(ushort))
-                {
-                    Data = BitConverter.ToUInt16(msg.ToArray(), 1);
-                }
-                else if (DataType[Header] == typeof(short))
-                {
-                    Data = BitConverter.ToInt16(msg.ToArray(), 1);
-                }
-                else if (DataType[Header] == typeof(uint))
-                {
-                    Data = BitConverter.ToUInt32(msg.ToArray(), 1);
-                }
-                else if (DataType[Header] == typeof(int))
-                {
-                    Data = BitConverter.ToInt32(msg.ToArray(), 1);
-                }
-                else if (DataType[Header] == typeof(float))
-                {
-                    Data = BitConverter.ToSingle(msg.ToArray(), 1);
-                }
-                else if (DataType[Header] == typeof((Vector, double)))
-                {
-                    Data = ToPosition(msg, 1);
-                }
-                else if (DataType[Header] == typeof((Vector, double, Vector, double)))
-                {
-                    Data = ToDebugPos(msg, 1);
-                }
-                else
-                {
-                    throw new NotImplementedException();
+                    case HeaderType.E_STOP:
+                        //bool
+                        Data = BitConverter.ToBoolean(msg.ToArray(), 1);
+                        break;
+                    case HeaderType.I_ANGLE:
+                        Data = BitConverter.ToSingle(msg.ToArray(), 1);
+                        break;
+                    case HeaderType.M_POS:
+                        Data = ToPosition(msg, 1);
+                        break;
+                    case HeaderType.DEBUG_POS:
+                        Data = ToDebugPos(msg, 1);
+                        break;
+                    case HeaderType.M_SEQUENCE:
+                    case HeaderType.M_STATE:
+                    case HeaderType.INJECT_Q:
+                    case HeaderType.POT_POS:
+                    default:
+                        throw new NotImplementedException();
                 }
             }
             catch
@@ -251,20 +188,6 @@ namespace ABU2021_ControlAndDebug.Core
         }
 
         #region ROS only
-        private static (Vector, int) ToPotPosition(String msgData)
-        {
-            var split = Regex.Split(msgData, ",");
-            try
-            {
-                Vector vec = new Vector(double.Parse(split[0]), double.Parse(split[1]));
-                int num = int.Parse(split[2]);
-                return (vec, num);
-            }
-            catch
-            {
-                throw new ArgumentException();
-            }
-        }
         private static int[] ToIntArray(String msgData)
         {
             var split = Regex.Split(msgData, ",");
@@ -273,6 +196,20 @@ namespace ABU2021_ControlAndDebug.Core
                 int test;
                 if (split.Count() == 1 &&  !int.TryParse(split[0], out test)) return new int[0];
                 return split.Select(sp => int.Parse(sp)).ToArray(); ;
+            }
+            catch
+            {
+                throw new ArgumentException();
+            }
+        }
+        private static double[] ToDoubleArray(String msgData)
+        {
+            var split = Regex.Split(msgData, ",");
+            try
+            {
+                double test;
+                if (split.Count() == 1 && !double.TryParse(split[0], out test)) return new double[0];
+                return split.Select(sp => double.Parse(sp)).ToArray(); ;
             }
             catch
             {

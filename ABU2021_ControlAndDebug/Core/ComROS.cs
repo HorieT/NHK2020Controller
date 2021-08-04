@@ -107,6 +107,7 @@ namespace ABU2021_ControlAndDebug.Core
             while (_isConencted)
             {
                 var data = await _wifiReader.ReadLineAsync();
+                if (data == null) continue;
                 //Trace.WriteLine("ReceiveDataMsg log. ->" + data);
                 try
                 {

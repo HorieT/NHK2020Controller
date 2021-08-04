@@ -28,6 +28,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
         private bool _isCheckedJoypad = false;
         private string _connectedText = "接続デバイス無し";
         private string _connectedJoypadText = "ジョイパッド無し";
+        private string _wifiSSID = "Wifi : None";
 
         public bool IsEnableDissconnect
         {
@@ -63,6 +64,11 @@ namespace ABU2021_ControlAndDebug.ViewModels
         {
             get => _connectedJoypadText;
             set { SetProperty(ref _connectedJoypadText, value); }
+        }
+        public string WifiSSID
+        {
+            get => _wifiSSID;
+            set { SetProperty(ref _wifiSSID, value); }
         }
         #endregion
 
@@ -290,6 +296,10 @@ namespace ABU2021_ControlAndDebug.ViewModels
                     IsCheckedRosWifi = false;
                 }
                 ConnectedText = "接続:" + Communicator.ConnectedDviseName;
+            }
+            else if(e.PropertyName == nameof(Communicator.NetworkName))
+            {
+                WifiSSID = "Wifi : " + Communicator.NetworkName;
             }
         }
         private void Joypad_PropertyChanged(object sender, PropertyChangedEventArgs e)

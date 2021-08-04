@@ -88,7 +88,7 @@
 
                 <MenuItem Header="{Binding ConnectedJoypadText}" DockPanel.Dock="Right" HorizontalAlignment="Right" Focusable="False" IsManipulationEnabled="False" IsEnabled="False"/>
                 <MenuItem Header="{Binding ConnectedText}" DockPanel.Dock="Right" HorizontalAlignment="Right" Focusable="False" IsManipulationEnabled="False" IsEnabled="False"/>
-                <MenuItem Header="{Binding Communicator.NetworkName}" DockPanel.Dock="Right" HorizontalAlignment="Right" Focusable="False" IsManipulationEnabled="False" IsEnabled="False"/>
+                <MenuItem Header="{Binding WifiSSID}" DockPanel.Dock="Right" HorizontalAlignment="Right" Focusable="False" IsManipulationEnabled="False" IsEnabled="False"/>
             </Menu>
 
 
