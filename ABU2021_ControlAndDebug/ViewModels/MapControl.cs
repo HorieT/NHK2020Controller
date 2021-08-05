@@ -18,8 +18,8 @@ namespace ABU2021_ControlAndDebug.ViewModels
     /// </summary>
     class MapControl : ViewModel
     {
-        private static readonly double MagnificationScale = 1.15;
-        private static readonly double MachineSizeDef = 1000;//描画用の想定値なので実際とは関係ない
+        private static readonly double MagnificationScale = 1.15;//拡大縮小コントロール値
+        private static readonly double MachineSizeDef = 1.000;//描画用の想定値なので実際とは関係ない
         private Point _scrollViewerDragStart;
 
         #region Model
@@ -47,8 +47,10 @@ namespace ABU2021_ControlAndDebug.ViewModels
             TableHeight = MapProperty.Table2PictureSoruce.PixelHeight;
             TableWidth = MapProperty.Table2PictureSoruce.PixelWidth;
             MapScale = new Vector(MapWidth / Models.MapProperty.MapSize.X, MapHeight / Models.MapProperty.MapSize.Y);
+            PotDiameter = Models.MapProperty.PotOuterDiameter * MapScale.X;
             #endregion
 
+            MapProperty.PropertyChanged += MapProperty_PropertyChanged;
             TR.PropertyChanged += TR_PropertyChanged;
             DR.PropertyChanged += DR_PropertyChanged;
             Communicator.PropertyChanged += Communicator_PropertyChanged;
@@ -62,10 +64,20 @@ namespace ABU2021_ControlAndDebug.ViewModels
         private double _mapHeight;
         private double _tableWidth;
         private double _tableHeight;
+        private double _potDiameter;
+        private double _table2FrontRot = 0.0;
+        private double _table2BackRot = 90.0;
+        private double _table3Rot = 0.0;
+        private Vector _pot1RightPoint;
+        private Vector _pot1LeftPoint;
+        private Vector _pot2FrontPoint;
+        private Vector _pot2BackPoint;
+        private Vector _pot3Point;
         private bool _isMachineEnabled;
-        private Point _machineCenter;
+        private Vector _machineCenter;
         private double _machineRot;
         private string _machineName;
+        private Brush _teamColor = new SolidColorBrush(Colors.Blue);
         //private Transform _canvasTransform;
 
 
@@ -90,6 +102,11 @@ namespace ABU2021_ControlAndDebug.ViewModels
             get => _tableHeight;
             private set { SetProperty(ref _tableHeight, value); }
         }
+        public double PotDiameter
+        {
+            get => _potDiameter;
+            private set { SetProperty(ref _potDiameter, value); }
+        }
         public Vector MapScale
         {
             get => _mapScale;
@@ -106,64 +123,28 @@ namespace ABU2021_ControlAndDebug.ViewModels
                 }
             }
         }
-        public Vector Tabele2aOffset { 
-            get
-            {
-                var v = Models.MapProperty.Tabele2aPoint - Models.MapProperty.TabeleSize * 0.5;
-                v.X *= MapScale.X;
-                v.Y *= MapScale.Y;
-                return v;
-            }
+        public Vector Tabele2FrontOffset { 
+            get => RealToCanvas(Models.MapProperty.Tabele2FrontPoint + Models.MapProperty.TabeleSize * 0.5);
         }
-        public Vector Tabele2bOffset
+        public Vector Tabele2BackOffset
         {
-            get
-            {
-                var v = Models.MapProperty.Tabele2bPoint - Models.MapProperty.TabeleSize * 0.5;
-                v.X *= MapScale.X;
-                v.Y *= MapScale.Y;
-                return v;
-            }
+            get => RealToCanvas(Models.MapProperty.Tabele2BackPoint + Models.MapProperty.TabeleSize * 0.5);
         }
         public Vector Tabele3Offset
         {
-            get
-            {
-                var v = Models.MapProperty.Tabele3Point - Models.MapProperty.TabeleSize * 0.5;
-                v.X *= MapScale.X;
-                v.Y *= MapScale.Y;
-                return v;
-            }
+            get => RealToCanvas(Models.MapProperty.Tabele3Point + Models.MapProperty.TabeleSize * 0.5);
         }
-        public Vector Tabele2aCenter
+        public Vector Tabele2FrontCenter
         {
-            get
-            {
-                var v = Models.MapProperty.Tabele2aPoint;
-                v.X *= MapScale.X;
-                v.Y *= MapScale.Y;
-                return v;
-            }
+            get => RealToCanvas(Models.MapProperty.Tabele2FrontPoint);
         }
-        public Vector Tabele2bCenter
+        public Vector Tabele2BackCenter
         {
-            get
-            {
-                var v = Models.MapProperty.Tabele2bPoint;
-                v.X *= MapScale.X;
-                v.Y *= MapScale.Y;
-                return v;
-            }
+            get => RealToCanvas(Models.MapProperty.Tabele2BackPoint);
         }
         public Vector Tabele3Center
         {
-            get
-            {
-                var v = Models.MapProperty.Tabele3Point;
-                v.X *= MapScale.X;
-                v.Y *= MapScale.Y;
-                return v;
-            }
+            get  => RealToCanvas(Models.MapProperty.Tabele3Point);
         }
         public Vector MachineSize
         {
@@ -176,7 +157,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
             get => _isMachineEnabled;
             set { SetProperty(ref _isMachineEnabled, value); }
         }
-        public Point MachineCenter
+        public Vector MachineCenter
         {
             get => _machineCenter;
             private set { SetProperty(ref _machineCenter, value); }
@@ -189,6 +170,51 @@ namespace ABU2021_ControlAndDebug.ViewModels
         public string MachineName {
             get => _machineName;
             set { SetProperty(ref _machineName, value); }
+        }
+        public double Table2FrontRot
+        {
+            get => _table2FrontRot;
+            private set { SetProperty(ref _table2FrontRot, value); }
+        }
+        public double Table2BackRot
+        {
+            get => _table2BackRot;
+            private set { SetProperty(ref _table2BackRot, value); }
+        }
+        public double Table3Rot
+        {
+            get => _table3Rot;
+            private set { SetProperty(ref _table3Rot, value); }
+        }
+        public Vector Pot1RightPoint
+        {
+            get => _pot1RightPoint;
+            private set { SetProperty(ref _pot1RightPoint, value); }
+        }
+        public Vector Pot1LeftPoint
+        {
+            get => _pot1LeftPoint;
+            private set { SetProperty(ref _pot1LeftPoint, value); }
+        }
+        public Vector Pot2FrontPoint
+        {
+            get => _pot2FrontPoint;
+            private set { SetProperty(ref _pot2FrontPoint, value); }
+        }
+        public Vector Pot2BackPoint
+        {
+            get => _pot2BackPoint;
+            private set { SetProperty(ref _pot2BackPoint, value); }
+        }
+        public Vector Pot3Point
+        {
+            get => _pot3Point;
+            private set { SetProperty(ref _pot3Point, value); }
+        }
+        public Brush TeamColor
+        {
+            get => _teamColor;
+            private set { SetProperty(ref _teamColor, value); }
         }
         #endregion
         #endregion
@@ -328,9 +354,11 @@ namespace ABU2021_ControlAndDebug.ViewModels
                          #region get control
                          var viewer = e.Source as ScrollViewer;//こいつはScrollViewerから直接発火
                          if (viewer == null) return;
+
                          #endregion
 
                          var canvas = viewer.Descendants<Canvas>().ToArray()[0];
+                         if (!canvas.IsStylusOver) return;//バー上でのタッチイベントは無視
 
                          double viewHOffset = viewer.HorizontalOffset,
                              viewVOffset = viewer.VerticalOffset;
@@ -361,18 +389,48 @@ namespace ABU2021_ControlAndDebug.ViewModels
 
 
         #region Method
-        private Point RealToCanvas(Point realPoint)
+        private Vector RealToCanvas(Point realPoint)
         {
-            return new Point(realPoint.X * MapScale.X + MapWidth * 0.5, MapHeight - realPoint.Y * MapScale.Y - MapHeight * 0.5);
+            return new Vector(realPoint.X * MapScale.X + MapWidth * 0.5, MapHeight - realPoint.Y * MapScale.Y - MapHeight * 0.5);
         }
-        private Point RealToCanvas(Vector realPoint)
+        private Vector RealToCanvas(Vector realPoint)
         {
-            return new Point(realPoint.X * MapScale.X + MapWidth * 0.5, MapHeight - realPoint.Y * MapScale.Y - MapHeight * 0.5);
+            return new Vector(realPoint.X * MapScale.X + MapWidth * 0.5, MapHeight - realPoint.Y * MapScale.Y - MapHeight * 0.5);
         }
 
 
 
 
+
+        private void MapProperty_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if(e.PropertyName == nameof(MapProperty.Pot1RightPos))
+            {
+                Pot1RightPoint = RealToCanvas(MapProperty.Pot1RightPos);
+            }
+            else if (e.PropertyName == nameof(MapProperty.Pot1LeftPos))
+            {
+                Pot1LeftPoint = RealToCanvas(MapProperty.Pot1LeftPos);
+            }
+            else if (e.PropertyName == nameof(MapProperty.Pot2FrontPos))
+            {
+                Pot2FrontPoint = RealToCanvas(MapProperty.Pot2FrontPos);
+                var v = MapProperty.Pot2FrontPos - Models.MapProperty.Tabele2FrontPoint;
+                Table2FrontRot = Math.Atan2(v.Y, -v.X) * 180.0 / Math.PI;
+            }
+            else if (e.PropertyName == nameof(MapProperty.Pot2BackPos))
+            {
+                Pot2BackPoint = RealToCanvas(MapProperty.Pot2BackPos);
+                var v = MapProperty.Pot2BackPos - Models.MapProperty.Tabele2BackPoint;
+                Table2BackRot = Math.Atan2(v.Y, -v.X) * 180.0 / Math.PI;
+            }
+            else if (e.PropertyName == nameof(MapProperty.Pot3Pos))
+            {
+                Pot3Point = RealToCanvas(MapProperty.Pot3Pos);
+                var v = MapProperty.Pot3Pos - Models.MapProperty.Tabele3Point;
+                Table3Rot = Math.Atan2(v.Y, -v.X) * 180.0 / Math.PI;
+            }
+        }
         private void TR_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if(e.PropertyName == nameof(TR.Positon))

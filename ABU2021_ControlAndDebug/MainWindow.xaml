@@ -30,7 +30,7 @@
             </Grid.ColumnDefinitions>
 
 
-            <Menu  Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
+            <Menu  Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" FontSize="14">
                 <Menu.DataContext>
                     <vmodel:MenuBar/>
                 </Menu.DataContext>
@@ -107,27 +107,35 @@
                         </ScrollViewer.DataContext>
 
                         <ItemsControl Margin="0">
+                            <ItemsControl.Resources>
+                                <local:CenterOffsetConverter x:Key="CenterConv"/>
+                            </ItemsControl.Resources>
+                            <!--#region Map-->
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <Canvas Height="{Binding MapHeight}" 
                                             Width="{Binding MapWidth}" 
-                                            ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                            ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                            Margin="100">
                                         <Canvas.Background>
                                             <ImageBrush ImageSource="{Binding MapProperty.MapPictureSoruce, Mode=OneTime}" Stretch="Fill"/>
                                         </Canvas.Background>
                                     </Canvas>
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
+                            <!--#endregion-->
+                            
+                            <!--#region Tables-->
                             <Image Source="{Binding MapProperty.Table2PictureSoruce, Mode=OneTime}"
                                    Height="{Binding TableHeight}"
                                    Width="{Binding TableWidth}">
                                 <Image.RenderTransform>
                                     <TransformGroup>
-                                        <TranslateTransform X="{Binding Tabele2aOffset.X, Mode=OneTime}"
-                                                            Y="{Binding Tabele2aOffset.Y, Mode=OneTime}"/>
-                                        <RotateTransform Angle="{Binding MapProperty.Table2aRot, Mode=OneWay}"
-                                                         CenterX="{Binding Tabele2aCenter.X, Mode=OneTime}"
-                                                         CenterY="{Binding Tabele2aCenter.Y, Mode=OneTime}"/>
+                                        <TranslateTransform X="{Binding Tabele2FrontOffset.X, Mode=OneTime}"
+                                                            Y="{Binding Tabele2FrontOffset.Y, Mode=OneTime}"/>
+                                        <RotateTransform Angle="{Binding Table2FrontRot, Mode=OneWay}"
+                                                         CenterX="{Binding Tabele2FrontCenter.X, Mode=OneTime}"
+                                                         CenterY="{Binding Tabele2FrontCenter.Y, Mode=OneTime}"/>
                                     </TransformGroup>
                                 </Image.RenderTransform>
                             </Image>
@@ -136,11 +144,11 @@
                                    Width="{Binding TableWidth}">
                                 <Image.RenderTransform>
                                     <TransformGroup>
-                                        <TranslateTransform X="{Binding Tabele2bOffset.X, Mode=OneTime}"
-                                                            Y="{Binding Tabele2bOffset.Y, Mode=OneTime}"/>
-                                        <RotateTransform Angle="{Binding MapProperty.Table2bRot, Mode=OneWay}"
-                                                         CenterX="{Binding Tabele2bCenter.X, Mode=OneTime}"
-                                                         CenterY="{Binding Tabele2bCenter.Y, Mode=OneTime}"/>
+                                        <TranslateTransform X="{Binding Tabele2BackOffset.X, Mode=OneTime}"
+                                                            Y="{Binding Tabele2BackOffset.Y, Mode=OneTime}"/>
+                                        <RotateTransform Angle="{Binding Table2BackRot, Mode=OneWay}"
+                                                         CenterX="{Binding Tabele2BackCenter.X, Mode=OneTime}"
+                                                         CenterY="{Binding Tabele2BackCenter.Y, Mode=OneTime}"/>
                                     </TransformGroup>
                                 </Image.RenderTransform>
                             </Image>
@@ -151,19 +159,152 @@
                                     <TransformGroup>
                                         <TranslateTransform X="{Binding Tabele3Offset.X, Mode=OneTime}"
                                                             Y="{Binding Tabele3Offset.Y, Mode=OneTime}"/>
-                                        <RotateTransform Angle="{Binding MapProperty.Table3Rot, Mode=OneWay}"
+                                        <RotateTransform Angle="{Binding Table3Rot, Mode=OneWay}"
                                                          CenterX="{Binding Tabele3Center.X, Mode=OneTime}"
                                                          CenterY="{Binding Tabele3Center.Y, Mode=OneTime}"/>
                                     </TransformGroup>
                                 </Image.RenderTransform>
                             </Image>
+                            <!--#endregion-->
+
+                            <!--#region Pots-->
+                            <Canvas IsEnabled="{Binding IsMachineEnabled}" 
+                                    Visibility="{Binding IsMachineEnabled, Converter={StaticResource BoolToVisibility}}" >
+                                <Ellipse 
+                                    Stroke="{Binding TeamColor}"
+                                    StrokeThickness="30"
+                                    Width="{Binding PotDiameter, Mode=OneTime}"
+                                    Height="{Binding PotDiameter, Mode=OneTime}"
+                                    Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
+                                    Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}">
+                                    <Ellipse.Fill>
+                                        <SolidColorBrush Color="LightGray" Opacity="0.8"/>
+                                    </Ellipse.Fill>
+                                </Ellipse>
+                                <TextBlock Text="0⃣" FontSize="60"
+                                           Width="80"
+                                           Height="80"
+                                           TextAlignment="Center"
+                                           Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
+                                           Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"/>
+                                <Canvas.RenderTransform>
+                                    <TransformGroup>
+                                        <TranslateTransform X="{Binding Pot1RightPoint.X, Mode=OneWay}"
+                                                            Y="{Binding Pot1RightPoint.Y, Mode=OneWay}"/>
+                                    </TransformGroup>
+                                </Canvas.RenderTransform>
+                            </Canvas>
+                            <Canvas IsEnabled="{Binding IsMachineEnabled}" 
+                                    Visibility="{Binding IsMachineEnabled, Converter={StaticResource BoolToVisibility}}" >
+                                <Ellipse 
+                                    Stroke="{Binding TeamColor}"
+                                    StrokeThickness="30"
+                                    Width="{Binding PotDiameter, Mode=OneTime}"
+                                    Height="{Binding PotDiameter, Mode=OneTime}"
+                                    Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
+                                    Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}">
+                                    <Ellipse.Fill>
+                                        <SolidColorBrush Color="LightGray" Opacity="0.8"/>
+                                    </Ellipse.Fill>
+                                </Ellipse>
+                                <TextBlock Text="1⃣" FontSize="60"
+                                           Width="80"
+                                           Height="80"
+                                           TextAlignment="Center"
+                                           Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
+                                           Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"/>
+                                <Canvas.RenderTransform>
+                                    <TransformGroup>
+                                        <TranslateTransform X="{Binding Pot1LeftPoint.X, Mode=OneWay}"
+                                                            Y="{Binding Pot1LeftPoint.Y, Mode=OneWay}"/>
+                                    </TransformGroup>
+                                </Canvas.RenderTransform>
+                            </Canvas>
+                            <Canvas IsEnabled="{Binding IsMachineEnabled}" 
+                                    Visibility="{Binding IsMachineEnabled, Converter={StaticResource BoolToVisibility}}" >
+                                <Ellipse 
+                                    Stroke="{Binding TeamColor}"
+                                    StrokeThickness="30"
+                                    Width="{Binding PotDiameter, Mode=OneTime}"
+                                    Height="{Binding PotDiameter, Mode=OneTime}"
+                                    Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
+                                    Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}">
+                                    <Ellipse.Fill>
+                                        <SolidColorBrush Color="LightGray" Opacity="0.8"/>
+                                    </Ellipse.Fill>
+                                </Ellipse>
+                                <TextBlock Text="2⃣" FontSize="60"
+                                           Width="80"
+                                           Height="80"
+                                           TextAlignment="Center"
+                                           Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
+                                           Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"/>
+                                <Canvas.RenderTransform>
+                                    <TransformGroup>
+                                        <TranslateTransform X="{Binding Pot2FrontPoint.X, Mode=OneWay}"
+                                                            Y="{Binding Pot2FrontPoint.Y, Mode=OneWay}"/>
+                                    </TransformGroup>
+                                </Canvas.RenderTransform>
+                            </Canvas>
+                            <Canvas IsEnabled="{Binding IsMachineEnabled}" 
+                                    Visibility="{Binding IsMachineEnabled, Converter={StaticResource BoolToVisibility}}" >
+                                <Ellipse 
+                                    Stroke="{Binding TeamColor}"
+                                    StrokeThickness="30"
+                                    Width="{Binding PotDiameter, Mode=OneTime}"
+                                    Height="{Binding PotDiameter, Mode=OneTime}"
+                                    Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
+                                    Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}">
+                                    <Ellipse.Fill>
+                                        <SolidColorBrush Color="LightGray" Opacity="0.8"/>
+                                    </Ellipse.Fill>
+                                </Ellipse>
+                                <TextBlock Text="3⃣" FontSize="60"
+                                           Width="80"
+                                           Height="80"
+                                           TextAlignment="Center"
+                                           Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
+                                           Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"/>
+                                <Canvas.RenderTransform>
+                                    <TransformGroup>
+                                        <TranslateTransform X="{Binding Pot2BackPoint.X, Mode=OneWay}"
+                                                            Y="{Binding Pot2BackPoint.Y, Mode=OneWay}"/>
+                                    </TransformGroup>
+                                </Canvas.RenderTransform>
+                            </Canvas>
+                            <Canvas IsEnabled="{Binding IsMachineEnabled}" 
+                                    Visibility="{Binding IsMachineEnabled, Converter={StaticResource BoolToVisibility}}" >
+                                <Ellipse 
+                                    Stroke="{Binding TeamColor}"
+                                    StrokeThickness="30"
+                                    Width="{Binding PotDiameter, Mode=OneTime}"
+                                    Height="{Binding PotDiameter, Mode=OneTime}"
+                                    Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
+                                    Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}">
+                                    <Ellipse.Fill>
+                                        <SolidColorBrush Color="LightGray" Opacity="0.8"/>
+                                    </Ellipse.Fill>
+                                </Ellipse>
+                                <TextBlock Text="4⃣" FontSize="60"
+                                           Width="80"
+                                           Height="80"
+                                           TextAlignment="Center"
+                                           Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
+                                           Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"/>
+                                <Canvas.RenderTransform>
+                                    <TransformGroup>
+                                        <TranslateTransform X="{Binding Pot3Point.X, Mode=OneWay}"
+                                                            Y="{Binding Pot3Point.Y, Mode=OneWay}"/>
+                                    </TransformGroup>
+                                </Canvas.RenderTransform>
+                            </Canvas>
+                            <!--#endregion-->
 
 
                             <Canvas x:Name="MachineCanvas" 
                                     IsEnabled="{Binding IsMachineEnabled}"
                                     Visibility="{Binding IsMachineEnabled, Converter={StaticResource BoolToVisibility}}">
                                 <Canvas.Resources>
-                                    <local:CenterOffsetConverter x:Key="CenterConv"/>
                                     <Storyboard x:Key="FlickerAnimation">
                                         <DoubleAnimation Storyboard.TargetProperty="Opacity"
                                                          From="1" To="0.1" Duration="0:0:0.5"
@@ -209,9 +350,6 @@
                                            Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}">
                                 </TextBlock>
                             </Canvas>
-                            
-                            <ItemsControl.Resources>
-                            </ItemsControl.Resources>
                         </ItemsControl>
                     </ScrollViewer>
                 </TabItem>

@@ -49,9 +49,13 @@ namespace ABU2021_ControlAndDebug.Core
             {
                 try
                 {
-                    //var _client = new System.Net.Sockets.TcpClient(ControlType.TCP_IP_ADDRESS, (int)Port);
-                    var _client = new System.Net.Sockets.TcpClient(GetMyIpaddress(), (int)Port);
-
+#if DEBUG
+                    var ip = GetMyIpaddress();
+#else
+                    var ip = ControlType.TCP_IP_ADDRESS;
+#endif
+                    Trace.WriteLine("Tcp cliant IP : " + ip);
+                    var _client = new System.Net.Sockets.TcpClient(ip, (int)Port);
                     _wifiStream = _client.GetStream();
                     _wifiReader = new StreamReader(_wifiStream, Encoding.UTF8);
                 }
@@ -122,7 +126,7 @@ namespace ABU2021_ControlAndDebug.Core
             }
             throw new InvalidOperationException("Dissconnected");
         }
-        #region private method
+#region private method
         private static string GetMyIpaddress()
         {
             var host = Dns.GetHostEntry(Dns.GetHostName());
@@ -135,7 +139,7 @@ namespace ABU2021_ControlAndDebug.Core
             }
             return null;
         }
-        #endregion
-        #endregion
+#endregion
+#endregion
     }
 }

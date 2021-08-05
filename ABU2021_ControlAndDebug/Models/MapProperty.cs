@@ -7,18 +7,20 @@ namespace ABU2021_ControlAndDebug.Models
 {
     /// <summary>
     /// フィールドとオブジェクトの情報
+    /// ポット位置等はControlTRかControlDRから入力
     /// </summary>
     class MapProperty : NotifyPropertyChanged
     {
-        public static readonly Vector MapSize = new Vector(12000.0, 12000.0);
-        public static readonly Vector TabeleSize = new Vector(1150.0, 330.0);
+        public static readonly Vector MapSize = new Vector(12.0000, 12.0000);
+        public static readonly Vector TabeleSize = new Vector(-1.1500, 0.3300);//もろもろの都合上符号反転
 
-        public static readonly double Pot1Diameter = 298.0;
-        public static readonly double Pot2Diameter = 250.0;
-        public static readonly double Pot3Diameter = 158.0;
-        public static readonly Vector Tabele2aPoint = new Vector(6000, 3500);
-        public static readonly Vector Tabele2bPoint = new Vector(6000, 8500);
-        public static readonly Vector Tabele3Point = new Vector(6000, 6000);
+        public static readonly double PotOuterDiameter = 0.300;
+        public static readonly double Pot1Diameter = 0.2980;
+        public static readonly double Pot2Diameter = 0.2500;
+        public static readonly double Pot3Diameter = 0.1580;
+        public static readonly Vector Tabele2BackPoint = new Vector(0.0, 2.500);
+        public static readonly Vector Tabele2FrontPoint = new Vector(0.0, -2.500);
+        public static readonly Vector Tabele3Point = new Vector(0.0, 0.0);
 
 
 
@@ -46,10 +48,12 @@ namespace ABU2021_ControlAndDebug.Models
         private BitmapImage _mapPictureSoruce;
         private BitmapImage _table2PictureSoruce;
         private BitmapImage _table3PictureSoruce;
+        private Vector _pot1RightPos;
+        private Vector _pot1LeftPos;
+        private Vector _pot2FrontPos;
+        private Vector _pot2BackPos;
+        private Vector _pot3Pos;
 
-        private double _table2aRot = 0.0;
-        private double _table2bRot = 0.0;
-        private double _table3Rot = 90.0;
 
         public BitmapImage MapPictureSoruce
         {
@@ -66,20 +70,30 @@ namespace ABU2021_ControlAndDebug.Models
             get => _table3PictureSoruce;
             private set { SetProperty(ref _table3PictureSoruce, value); }
         }
-        public double Table2aRot
+        public Vector Pot1RightPos
         {
-            get => _table2aRot;
-            private set { SetProperty(ref _table2aRot, value); }
+            get => _pot1RightPos;
+            set { SetProperty(ref _pot1RightPos, value); }
         }
-        public double Table2bRot
+        public Vector Pot1LeftPos
         {
-            get => _table2bRot;
-            private set { SetProperty(ref _table2bRot, value); }
+            get => _pot1LeftPos;
+            set { SetProperty(ref _pot1LeftPos, value); }
         }
-        public double Table3Rot
+        public Vector Pot2FrontPos
         {
-            get => _table3Rot;
-            private set { SetProperty(ref _table3Rot, value); }
+            get => _pot2FrontPos;
+            set { SetProperty(ref _pot2FrontPos, value); }
+        }
+        public Vector Pot2BackPos
+        {
+            get => _pot2BackPos;
+            set { SetProperty(ref _pot2BackPos, value); }
+        }
+        public Vector Pot3Pos
+        {
+            get => _pot3Pos;
+            set { SetProperty(ref _pot3Pos, value); }
         }
         #endregion
 

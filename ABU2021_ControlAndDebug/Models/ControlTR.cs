@@ -23,6 +23,7 @@ namespace ABU2021_ControlAndDebug.Models
         #region Model
         private OutputLog _log;
         private Communicator _communicator;
+        private MapProperty _mapProperty;
         private DebugSate _debugSate;
         #endregion
 
@@ -54,6 +55,7 @@ namespace ABU2021_ControlAndDebug.Models
         {
             _log = OutputLog.GetInstance;
             _communicator = Communicator.GetInstance;
+            _mapProperty = MapProperty.GetInstance;
             _debugSate = DebugSate.GetInstance;
 
             _communicator.PropertyChanged += _communicator_PropertyChanged;
@@ -255,6 +257,16 @@ namespace ABU2021_ControlAndDebug.Models
                             break;
                         case Core.ReceiveDataMsg.HeaderType.M_SEQUENCE:
                             MachineSequence = (msg.Data as string);
+                            break;
+                        case Core.ReceiveDataMsg.HeaderType.POT_POS:
+                            {
+                                var pots = (msg.Data as double[]);
+                                _mapProperty.Pot1RightPos = new Vector(pots[0], pots[1]);
+                                _mapProperty.Pot1LeftPos =  new Vector(pots[2], pots[3]);
+                                _mapProperty.Pot2FrontPos = new Vector(pots[4], pots[5]);
+                                _mapProperty.Pot2BackPos =  new Vector(pots[6], pots[7]);
+                                _mapProperty.Pot3Pos =      new Vector(pots[8], pots[9]);
+                            }
                             break;
                         case Core.ReceiveDataMsg.HeaderType.DEBUG_POS:
                             var taple = (ValueTuple<Vector, double, Vector, double>)msg.Data;
