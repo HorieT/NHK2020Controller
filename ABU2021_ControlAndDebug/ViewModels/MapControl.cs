@@ -73,6 +73,11 @@ namespace ABU2021_ControlAndDebug.ViewModels
         private Vector _pot2FrontPoint;
         private Vector _pot2BackPoint;
         private Vector _pot3Point;
+        private bool _pot1RightIsHighlighted;
+        private bool _pot1LeftIsHighlighted;
+        private bool _pot2FrontIsHighlighted;
+        private bool _pot2BackIsHighlighted;
+        private bool _pot3IsHighlighted;
         private bool _isMachineEnabled;
         private Vector _machineCenter;
         private double _machineRot;
@@ -210,6 +215,31 @@ namespace ABU2021_ControlAndDebug.ViewModels
         {
             get => _pot3Point;
             private set { SetProperty(ref _pot3Point, value); }
+        }
+        public bool Pot1RightIsHighlighted
+        {
+            get => _pot1RightIsHighlighted;
+            private set { SetProperty(ref _pot1RightIsHighlighted, value); }
+        }
+        public bool Pot1LeftIsHighlighted
+        {
+            get => _pot1LeftIsHighlighted;
+            private set { SetProperty(ref _pot1LeftIsHighlighted, value); }
+        }
+        public bool Pot2FrontIsHighlighted
+        {
+            get => _pot2FrontIsHighlighted;
+            private set { SetProperty(ref _pot2FrontIsHighlighted, value); }
+        }
+        public bool Pot2BackIsHighlighted
+        {
+            get => _pot2BackIsHighlighted;
+            private set { SetProperty(ref _pot2BackIsHighlighted, value); }
+        }
+        public bool Pot3IsHighlighted
+        {
+            get => _pot3IsHighlighted;
+            private set { SetProperty(ref _pot3IsHighlighted, value); }
         }
         public Brush TeamColor
         {
@@ -437,13 +467,42 @@ namespace ABU2021_ControlAndDebug.ViewModels
             {
                 MachineCenter = RealToCanvas(TR.Positon);
             }
-            else if (e.PropertyName == nameof(TR.PositonRot))
+            if (e.PropertyName == nameof(TR.PositonRot))
             {
                 MachineRot = -TR.PositonRot * 180.0 / Math.PI;
             }
-            else if(e.PropertyName == nameof(TR.IsEnabaled))
+            if(e.PropertyName == nameof(TR.IsEnabaled))
             {
                 IsMachineEnabled = TR.IsEnabaled;
+            }
+            if(e.PropertyName == nameof(TR.PotsQueue))
+            {
+                Pot1RightIsHighlighted = false;
+                Pot1LeftIsHighlighted = false;
+                Pot2FrontIsHighlighted = false;
+                Pot2BackIsHighlighted = false;
+                Pot3IsHighlighted = false;
+                if(TR.PotsQueue.Count != 0)
+                {
+                    switch (TR.PotsQueue[0])
+                    {
+                        case Core.ControlType.Pot._1Right:
+                            Pot1RightIsHighlighted = true;
+                            break;
+                        case Core.ControlType.Pot._1Left:
+                            Pot1LeftIsHighlighted = true;
+                            break;
+                        case Core.ControlType.Pot._2Front:
+                            Pot2FrontIsHighlighted = true;
+                            break;
+                        case Core.ControlType.Pot._2Back:
+                            Pot2BackIsHighlighted = true;
+                            break;
+                        case Core.ControlType.Pot._3:
+                            Pot3IsHighlighted = true;
+                            break;
+                    }
+                }
             }
         }
         private void DR_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)

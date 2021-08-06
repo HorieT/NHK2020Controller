@@ -21,8 +21,8 @@
         <Grid x:Name="MainGrid" Height="800" Width="1000">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="5*"/>
-                <RowDefinition Height="2*"/>
+                <RowDefinition Height="3*"/>
+                <RowDefinition Height="1*"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="3*"/>
@@ -109,17 +109,98 @@
                         <ItemsControl Margin="0">
                             <ItemsControl.Resources>
                                 <local:CenterOffsetConverter x:Key="CenterConv"/>
+                                <Storyboard x:Key="NextPotAnimation">
+                                    <DoubleAnimation 
+                                        Storyboard.TargetProperty="Width"
+                                        By="200" Duration="0:0:1"
+                                        RepeatBehavior="Forever" 
+                                        AutoReverse="False">
+                                        <DoubleAnimation.EasingFunction>
+                                            <ExponentialEase EasingMode="EaseIn"/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                    <DoubleAnimation 
+                                        Storyboard.TargetProperty="Height"
+                                        By="200" Duration="0:0:1"
+                                        RepeatBehavior="Forever" 
+                                        AutoReverse="False">
+                                        <DoubleAnimation.EasingFunction>
+                                            <ExponentialEase EasingMode="EaseIn"/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                    <DoubleAnimation 
+                                        Storyboard.TargetProperty="Opacity"
+                                        From="1" To="0.2" Duration="0:0:1"
+                                        RepeatBehavior="Forever" 
+                                        AutoReverse="False" >
+                                        <DoubleAnimation.EasingFunction>
+                                            <ExponentialEase EasingMode="EaseIn"/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                </Storyboard>
+                                <!--
+                                <Style TargetType="Canvas" x:Key="PotBase">
+                                    <Setter Property="IsEnabled" Value="{Binding IsMachineEnabled}"/>
+                                    <Setter Property="Visibility" Value="{Binding IsMachineEnabled, Converter={StaticResource BoolToVisibility}}"/>
+                                    <Setter Property="RenderTransform">
+                                        <Setter.Value>
+                                            <TransformGroup>
+                                                <TranslateTransform 
+                                                X="{Binding Tag.X, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Canvas}}"
+                                                Y="{Binding Tag.Y, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Canvas}}"/>
+                                            </TransformGroup>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                                -->
+                                <Style TargetType="Ellipse" x:Key="Pot">
+                                    <Setter Property="Stroke" Value="{Binding TeamColor}"/>
+                                    <Setter Property="StrokeThickness" Value="30"/>
+                                    <Setter Property="Width" Value="{Binding PotDiameter, Mode=OneTime}"/>
+                                    <Setter Property="Height" Value="{Binding PotDiameter, Mode=OneTime}"/>
+                                    <Setter Property="Canvas.Left" Value="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"/>
+                                    <Setter Property="Canvas.Top" Value="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"/>
+                                    <Setter Property="Fill">
+                                        <Setter.Value>
+                                            <SolidColorBrush Color="LightGray" Opacity="0.8"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="True">
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard Storyboard="{StaticResource NextPotAnimation}"/>
+                                            </DataTrigger.EnterActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                                <Style TargetType="TextBlock" x:Key="PotNum">
+                                    <Setter Property="FontSize" Value="70"/>
+                                    <Setter Property="Width" Value="90"/>
+                                    <Setter Property="Height" Value="90"/>
+                                    <Setter Property="TextAlignment" Value="Center"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="Canvas.Left" Value="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"/>
+                                    <Setter Property="Canvas.Top" Value="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"/>
+                                </Style>
                             </ItemsControl.Resources>
+                            
+                            
                             <!--#region Map-->
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <Canvas Height="{Binding MapHeight}" 
                                             Width="{Binding MapWidth}" 
                                             ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                                            Margin="100">
+                                            Margin="50">
                                         <Canvas.Background>
                                             <ImageBrush ImageSource="{Binding MapProperty.MapPictureSoruce, Mode=OneTime}" Stretch="Fill"/>
                                         </Canvas.Background>
+                                        <!--しょっぱな見づらいのアレなので-->
+                                        <Canvas.LayoutTransform>
+                                            <TransformGroup>
+                                                <ScaleTransform ScaleX="0.1" ScaleY="0.1" />
+                                            </TransformGroup>
+                                        </Canvas.LayoutTransform>
                                     </Canvas>
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
@@ -170,23 +251,8 @@
                             <!--#region Pots-->
                             <Canvas IsEnabled="{Binding IsMachineEnabled}" 
                                     Visibility="{Binding IsMachineEnabled, Converter={StaticResource BoolToVisibility}}" >
-                                <Ellipse 
-                                    Stroke="{Binding TeamColor}"
-                                    StrokeThickness="30"
-                                    Width="{Binding PotDiameter, Mode=OneTime}"
-                                    Height="{Binding PotDiameter, Mode=OneTime}"
-                                    Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
-                                    Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}">
-                                    <Ellipse.Fill>
-                                        <SolidColorBrush Color="LightGray" Opacity="0.8"/>
-                                    </Ellipse.Fill>
-                                </Ellipse>
-                                <TextBlock Text="0⃣" FontSize="60"
-                                           Width="80"
-                                           Height="80"
-                                           TextAlignment="Center"
-                                           Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
-                                           Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"/>
+                                <Ellipse Style="{StaticResource Pot}" Tag="{Binding Pot1RightIsHighlighted}"/>
+                                <TextBlock Text="0⃣" Style="{StaticResource PotNum}"/>
                                 <Canvas.RenderTransform>
                                     <TransformGroup>
                                         <TranslateTransform X="{Binding Pot1RightPoint.X, Mode=OneWay}"
@@ -196,23 +262,8 @@
                             </Canvas>
                             <Canvas IsEnabled="{Binding IsMachineEnabled}" 
                                     Visibility="{Binding IsMachineEnabled, Converter={StaticResource BoolToVisibility}}" >
-                                <Ellipse 
-                                    Stroke="{Binding TeamColor}"
-                                    StrokeThickness="30"
-                                    Width="{Binding PotDiameter, Mode=OneTime}"
-                                    Height="{Binding PotDiameter, Mode=OneTime}"
-                                    Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
-                                    Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}">
-                                    <Ellipse.Fill>
-                                        <SolidColorBrush Color="LightGray" Opacity="0.8"/>
-                                    </Ellipse.Fill>
-                                </Ellipse>
-                                <TextBlock Text="1⃣" FontSize="60"
-                                           Width="80"
-                                           Height="80"
-                                           TextAlignment="Center"
-                                           Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
-                                           Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"/>
+                                <Ellipse Style="{StaticResource Pot}"  Tag="{Binding Pot1LeftIsHighlighted}"/>
+                                <TextBlock Text="1⃣" Style="{StaticResource PotNum}"/>
                                 <Canvas.RenderTransform>
                                     <TransformGroup>
                                         <TranslateTransform X="{Binding Pot1LeftPoint.X, Mode=OneWay}"
@@ -222,23 +273,8 @@
                             </Canvas>
                             <Canvas IsEnabled="{Binding IsMachineEnabled}" 
                                     Visibility="{Binding IsMachineEnabled, Converter={StaticResource BoolToVisibility}}" >
-                                <Ellipse 
-                                    Stroke="{Binding TeamColor}"
-                                    StrokeThickness="30"
-                                    Width="{Binding PotDiameter, Mode=OneTime}"
-                                    Height="{Binding PotDiameter, Mode=OneTime}"
-                                    Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
-                                    Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}">
-                                    <Ellipse.Fill>
-                                        <SolidColorBrush Color="LightGray" Opacity="0.8"/>
-                                    </Ellipse.Fill>
-                                </Ellipse>
-                                <TextBlock Text="2⃣" FontSize="60"
-                                           Width="80"
-                                           Height="80"
-                                           TextAlignment="Center"
-                                           Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
-                                           Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"/>
+                                <Ellipse Style="{StaticResource Pot}" Tag="{Binding Pot2FrontIsHighlighted}"/>
+                                <TextBlock Text="2⃣"  Style="{StaticResource PotNum}"/>
                                 <Canvas.RenderTransform>
                                     <TransformGroup>
                                         <TranslateTransform X="{Binding Pot2FrontPoint.X, Mode=OneWay}"
@@ -248,23 +284,8 @@
                             </Canvas>
                             <Canvas IsEnabled="{Binding IsMachineEnabled}" 
                                     Visibility="{Binding IsMachineEnabled, Converter={StaticResource BoolToVisibility}}" >
-                                <Ellipse 
-                                    Stroke="{Binding TeamColor}"
-                                    StrokeThickness="30"
-                                    Width="{Binding PotDiameter, Mode=OneTime}"
-                                    Height="{Binding PotDiameter, Mode=OneTime}"
-                                    Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
-                                    Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}">
-                                    <Ellipse.Fill>
-                                        <SolidColorBrush Color="LightGray" Opacity="0.8"/>
-                                    </Ellipse.Fill>
-                                </Ellipse>
-                                <TextBlock Text="3⃣" FontSize="60"
-                                           Width="80"
-                                           Height="80"
-                                           TextAlignment="Center"
-                                           Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
-                                           Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"/>
+                                <Ellipse Style="{StaticResource Pot}" Tag="{Binding Pot2BackIsHighlighted}"/>
+                                <TextBlock Text="3⃣"  Style="{StaticResource PotNum}"/>
                                 <Canvas.RenderTransform>
                                     <TransformGroup>
                                         <TranslateTransform X="{Binding Pot2BackPoint.X, Mode=OneWay}"
@@ -274,23 +295,8 @@
                             </Canvas>
                             <Canvas IsEnabled="{Binding IsMachineEnabled}" 
                                     Visibility="{Binding IsMachineEnabled, Converter={StaticResource BoolToVisibility}}" >
-                                <Ellipse 
-                                    Stroke="{Binding TeamColor}"
-                                    StrokeThickness="30"
-                                    Width="{Binding PotDiameter, Mode=OneTime}"
-                                    Height="{Binding PotDiameter, Mode=OneTime}"
-                                    Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
-                                    Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}">
-                                    <Ellipse.Fill>
-                                        <SolidColorBrush Color="LightGray" Opacity="0.8"/>
-                                    </Ellipse.Fill>
-                                </Ellipse>
-                                <TextBlock Text="4⃣" FontSize="60"
-                                           Width="80"
-                                           Height="80"
-                                           TextAlignment="Center"
-                                           Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
-                                           Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"/>
+                                <Ellipse Style="{StaticResource Pot}" Tag="{Binding Pot3IsHighlighted}"/>
+                                <TextBlock Text="4⃣"  Style="{StaticResource PotNum}"/>
                                 <Canvas.RenderTransform>
                                     <TransformGroup>
                                         <TranslateTransform X="{Binding Pot3Point.X, Mode=OneWay}"
