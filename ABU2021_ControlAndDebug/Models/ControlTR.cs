@@ -134,7 +134,8 @@ namespace ABU2021_ControlAndDebug.Models
         }
         public ObservableCollection<Core.ControlType.Pot> PotsQueue { 
             get => _potsQueue;
-            private set { SetProperty(ref _potsQueue, value); } 
+            private set { 
+                if(!_potsQueue.SequenceEqual(value))SetProperty(ref _potsQueue, value); } 
         }
         #endregion
         #endregion
@@ -155,6 +156,23 @@ namespace ABU2021_ControlAndDebug.Models
             double tmp1 = Math.Pow(speed * Math.Cos(deg * Math.PI/180), 2);
             double tmp2 = Math.Tan(deg * Math.PI / 180);
             return -tmp1 * (-tmp2 - Math.Sqrt(Math.Pow(tmp2, 2) + 2 * 9.8 * (InjectHeight - height) / tmp1)) / 9.8;
+        }
+
+        public void AddInjectQueue(Core.ControlType.Pot pot, int index)
+        {
+            if (!IsEnabaled) throw new InvalidOperationException("TR is not enbale");
+            if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), "Negative value cannot be set");
+            _communicator.SendMsg(new Core.SendDataMsg(Core.SendDataMsg.HeaderType.INJECT_Q_INS, new int[]{ (int)pot, index }));
+            _log.WiteLine("ポットをキューに追加 : index " + index.ToString() + "->" + ((int)pot).ToString() + "[" + pot.ToString() + "]");
+        }
+        public void AddInjectQueue(Core.ControlType.Pot pot)
+        {
+            AddInjectQueue(pot, PotsQueue.Count);
+        }
+        public void DeleatInjectQueue(int index)
+        {
+            if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), "Negative value cannot be set");
+            _communicator.SendMsg(new Core.SendDataMsg(Core.SendDataMsg.HeaderType.INJECT_Q_DEL, index));
         }
 
 
@@ -233,6 +251,10 @@ namespace ABU2021_ControlAndDebug.Models
             }
             //outputLogText.Text += "プロジェクトを保存しました。\n\n";
         }
+
+
+
+
 
 
         private async Task ReadMsg()

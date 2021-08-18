@@ -29,6 +29,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
         private bool _isEnabled;
         private string _injectSpeedText = "1.00";
         private string _fallPredictionText;
+        private int _injectQueueSelectedIndex = -1;
 
 
         public bool IsEnabed
@@ -46,6 +47,11 @@ namespace ABU2021_ControlAndDebug.ViewModels
             get => _fallPredictionText;
             set { SetProperty(ref _fallPredictionText, value); }
         }
+        public int InjectQueueSelectedIndex
+        {
+            get => _injectQueueSelectedIndex;
+            set { SetProperty(ref _injectQueueSelectedIndex, value); }
+        }
         #endregion
 
 
@@ -56,6 +62,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
         private ICommand _injectTextBox_PreviewTextInput;
         private ICommand _injectTextBox_LostFocus;
         private ICommand _injectButton_Click;
+        private ICommand _injectQueue_SelectedCellChanged;
         public ICommand NoPasteTextBox_PreviewExecuted
         {
             get
@@ -169,6 +176,23 @@ namespace ABU2021_ControlAndDebug.ViewModels
                                 _log.WiteErrorMsg("Inject error.");
                                 Trace.WriteLine("Inject error. ->" + ex.Message);
                             }
+                        }));
+            }
+        }
+        
+        public ICommand InjectQueue_SelectedCellChanged
+        {
+            get
+            {
+                return _injectQueue_SelectedCellChanged ??
+                    (_injectQueue_SelectedCellChanged = CreateCommand(
+                        (SelectedCellsChangedEventArgs e) => {
+                            if(InjectQueueSelectedIndex > -1)
+                            {
+                                TR.DeleatInjectQueue(InjectQueueSelectedIndex);
+                                _log.WiteLine("キューから削除 : Index " + InjectQueueSelectedIndex.ToString());
+                            }
+                            InjectQueueSelectedIndex = -1;
                         }));
             }
         }

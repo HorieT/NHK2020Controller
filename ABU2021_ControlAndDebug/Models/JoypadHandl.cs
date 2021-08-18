@@ -94,7 +94,7 @@ namespace ABU2021_ControlAndDebug.Models
         {
             if(!_pad.IsEnabled)
             {
-                _log.WiteErrorMsg("ジョイパッドがありません");
+                _log.WiteErrorMsg("ジョイパッドが有効ではありません");
                 throw new InvalidOperationException("Joypad not found");
             }
 

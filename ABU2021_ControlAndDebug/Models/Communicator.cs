@@ -26,6 +26,8 @@ namespace ABU2021_ControlAndDebug.Models
         private OutputLog _log;
         private JoypadHandl _joypad;
         private Timer _sendMsgTimer;
+        private object _sendMsgLock = new object();
+        private System.Threading.SemaphoreSlim _SendMsgSemaphore = new System.Threading.SemaphoreSlim(1, 1);
         private Core.ComDevice _comDevice;
         private Core.SendDataMsg _sendMsgJoy = new Core.SendDataMsg(Core.SendDataMsg.HeaderType.JOY, new JoystickState());
         private SynchronizationContext _mainContext;
@@ -181,8 +183,9 @@ namespace ABU2021_ControlAndDebug.Models
         }
         public void Disconnect()
         {
-            
             if (!IsConnected) return;// throw new InvalidOperationException("Non connected");
+
+            Trace.WriteLine("Try disconnect Communicator.");
             try
             {
                 _sendMsgTimer?.Change(Timeout.Infinite, Timeout.Infinite);
@@ -214,7 +217,7 @@ namespace ABU2021_ControlAndDebug.Models
             }
             catch
             {
-                _log.WiteErrorMsg("切断されました");
+                _log.WiteErrorMsg("切断されました(sm)");
                 Disconnect();
                 throw;
             }
@@ -229,7 +232,7 @@ namespace ABU2021_ControlAndDebug.Models
             }
             catch
             {
-                _log.WiteErrorMsg("切断されました");
+                _log.WiteErrorMsg("切断されました(rm)");
                 Disconnect();
                 throw;
             }
@@ -242,28 +245,32 @@ namespace ABU2021_ControlAndDebug.Models
         /// <param name="sender"></param>
         private void PeriodicSendMsg(object sender)
         {
-            if (_joypad.IsEnabled)
+            lock (_sendMsgLock)
             {
-                Task.Run(async () => {
-                    try
-                    {
-                        //_sendMsgJoy.Reset(Core.SendDataMsg.HeaderType.JOY, _joypad.GetPad().JoyInfoEx);
+                if (!(_comDevice?.IsConnected ?? false))
+                {
+                    _mainContext.Post(_ => Disconnect(), null);
+                    _log.WiteErrorMsg("切断されました(pm)");
+                    return;
+                }
 
-                        if (_comDevice != null)
+                if (_joypad.IsEnabled)
+                {
+                    Task.Run(async () => {
+                        var data = new Core.SendDataMsg(Core.SendDataMsg.HeaderType.JOY, _joypad.GetPad());
+                        try
                         {
-                            var data = new Core.SendDataMsg(Core.SendDataMsg.HeaderType.JOY, _joypad.GetPad());
-
-                            await (_comDevice?.SendMsgAsync(data) ?? Task.Delay(0));//ホントはnullのとき返したいけどなんか面倒なのでとりあえず
+                            await _comDevice?.SendMsgAsync(data); 
                             _log.WiteDebugMsg(data.ConvString());
                         }
-                    }
-                    catch
-                    {
-                        _log.WiteDebugMsg("送信失敗");
-                        _mainContext.Post(_ => Disconnect(), null);
-                        _log.WiteErrorMsg("切断されました");
-                    }
-                });
+                        catch
+                        {
+                            _log.WiteDebugMsg("送信失敗");
+                            _mainContext.Post(_ => Disconnect(), null);
+                            _log.WiteErrorMsg("切断されました");
+                        }
+                    });
+                }
             }
         }
         private void ConnectStatusChage()

@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using MVVMLib;
 
 namespace ABU2021_ControlAndDebug.ViewModels
@@ -21,6 +22,8 @@ namespace ABU2021_ControlAndDebug.ViewModels
         private static readonly double MagnificationScale = 1.15;//拡大縮小コントロール値
         private static readonly double MachineSizeDef = 1.000;//描画用の想定値なので実際とは関係ない
         private Point _scrollViewerDragStart;
+        private Core.ControlType.Pot CapturedPot;
+        private bool IsPotCaptured;
 
         #region Model
         public Models.OutputLog Log { get; private set; }
@@ -73,6 +76,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
         private Vector _pot2FrontPoint;
         private Vector _pot2BackPoint;
         private Vector _pot3Point;
+        private double _potHitboxDiameter = 500.0;
         private bool _pot1RightIsHighlighted;
         private bool _pot1LeftIsHighlighted;
         private bool _pot2FrontIsHighlighted;
@@ -216,6 +220,11 @@ namespace ABU2021_ControlAndDebug.ViewModels
             get => _pot3Point;
             private set { SetProperty(ref _pot3Point, value); }
         }
+        public double PotHitboxDiameter
+        {
+            get => _potHitboxDiameter;
+            private set { SetProperty(ref _potHitboxDiameter, value); }
+        }
         public bool Pot1RightIsHighlighted
         {
             get => _pot1RightIsHighlighted;
@@ -255,6 +264,8 @@ namespace ABU2021_ControlAndDebug.ViewModels
         private ICommand _scrollViewer_MouseDown;
         private ICommand _scrollViewer_MouseUp;
         private ICommand _scrollViewer_MouseMove;
+        private ICommand _scrollViewer_ManipulationStarting;
+        private ICommand _scrollViewer_ManipulationCompleted;
         private ICommand _scrollViewer_ManipulationDelta;
 
         /// <summary>
@@ -285,6 +296,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
 
                           matrix.ScaleAt(scaleing, scaleing, Mouse.GetPosition(canvas).X, Mouse.GetPosition(canvas).Y);
                           canvas.LayoutTransform = new MatrixTransform(matrix);
+                          PotHitboxDiameter /= scaleing;
 
                           viewer.ScrollToHorizontalOffset((Mouse.GetPosition(viewer).X + viewHOffset) * scaleing - Mouse.GetPosition(viewer).X);
                           viewer.ScrollToVerticalOffset((Mouse.GetPosition(viewer).Y + viewVOffset) * scaleing - Mouse.GetPosition(viewer).Y);
@@ -292,7 +304,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
             }
         }
         /// <summary>
-        /// ScrollViewer上でセンター押下時位置をキャプチャ
+        /// ScrollViewer上で押下時位置をキャプチャ
         /// </summary>
         public ICommand ScrollViewer_MouseDown
         {
@@ -301,8 +313,25 @@ namespace ABU2021_ControlAndDebug.ViewModels
                 return _scrollViewer_MouseDown ??
                   (_scrollViewer_MouseDown = CreateCommand(
                       (MouseButtonEventArgs e) => {
+
+
                           #region get control
                           var control = e.Source as UIElement;
+
+                          //potCanvasをキャッチ
+                          var canvas = control?.Ancestor<Canvas>();
+                          if(canvas != null)
+                          {
+                              if (Enum.IsDefined(typeof(Core.ControlType.Pot), canvas.Name))
+                              {
+                                  Core.ControlType.Pot pot = (Core.ControlType.Pot)Enum.Parse(typeof(Core.ControlType.Pot), canvas.Name);
+                                  CapturedPot = pot;
+                                  IsPotCaptured = true;
+                                  e.Handled = true;
+                                  return;
+                              }
+                          }
+
                           var viewer = control?.Ancestor<ScrollViewer>();
                           if (viewer == null) return;
                           #endregion
@@ -317,7 +346,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
             }
         }
         /// <summary>
-        /// ScrollViewer上でセンターリリース時位置をキャプチャ
+        /// ScrollViewer上でリリース時位置をキャプチャ
         /// </summary>
         public ICommand ScrollViewer_MouseUp
         {
@@ -328,6 +357,25 @@ namespace ABU2021_ControlAndDebug.ViewModels
                         (MouseButtonEventArgs e) => {
                             #region get control
                             var control = e.Source as UIElement;
+
+                            //potCanvasをキャッチ
+                            var canvas = control?.Ancestor<Canvas>();
+                            if (canvas != null)
+                            {
+                                if (Enum.IsDefined(typeof(Core.ControlType.Pot), canvas.Name) && e.ChangedButton == MouseButton.Left && e.ButtonState == MouseButtonState.Released)
+                                {
+                                    Core.ControlType.Pot pot = (Core.ControlType.Pot)Enum.Parse(typeof(Core.ControlType.Pot), canvas.Name);
+                                    if (IsPotCaptured && pot == CapturedPot)
+                                    {
+                                        IsPotCaptured = false;
+                                        PotClick(pot);
+                                        return;
+                                    }
+                                }
+                            }
+
+
+
                             var viewer = control?.Ancestor<ScrollViewer>();
                             if (viewer == null) return;
                             #endregion
@@ -369,6 +417,63 @@ namespace ABU2021_ControlAndDebug.ViewModels
         /// <summary>
         /// タッチ操作
         /// </summary>
+        public ICommand ScrollViewer_ManipulationStarting
+        {
+            get
+            {
+                return _scrollViewer_ManipulationStarting ??
+                (_scrollViewer_ManipulationStarting = CreateCommand(
+                      (ManipulationStartingEventArgs e) =>
+                      {
+                          switch (e.Source)
+                          {
+                              case Canvas canvas:
+                                  {
+                                      Core.ControlType.Pot pot = (Core.ControlType.Pot)Enum.Parse(typeof(Core.ControlType.Pot), canvas.Name);
+                                      CapturedPot = pot;
+                                      IsPotCaptured = true;
+                                  }
+                                break;
+                              default:
+                                return;
+                          }
+                          e.Handled = true;
+                      }));
+            }
+        }
+        /// <summary>
+        /// タッチ操作
+        /// </summary>
+        public ICommand ScrollViewer_ManipulationCompleted
+        {
+            get
+            {
+                return _scrollViewer_ManipulationCompleted ??
+                (_scrollViewer_ManipulationCompleted = CreateCommand(
+                      (ManipulationCompletedEventArgs e) =>
+                      {
+                          switch (e.Source)
+                          {
+                              case Canvas canvas:
+                                  {
+                                      Core.ControlType.Pot pot = (Core.ControlType.Pot)Enum.Parse(typeof(Core.ControlType.Pot), canvas.Name);
+                                      if(IsPotCaptured && pot == CapturedPot)
+                                      {
+                                          IsPotCaptured = false;
+                                          if (!PotClick(pot)) return;
+                                      }
+                                  }
+                                  break;
+                              default:
+                                  return;
+                          }
+                          e.Handled = true;
+                      }));
+            }
+        }
+        /// <summary>
+        /// タッチ操作
+        /// </summary>
         public ICommand ScrollViewer_ManipulationDelta
         {
             get
@@ -377,18 +482,20 @@ namespace ABU2021_ControlAndDebug.ViewModels
                (_scrollViewer_ManipulationDelta = CreateCommand(
                      (ManipulationDeltaEventArgs e) =>
                      {
-                         e.Handled = true;
                          double scaleing = e.DeltaManipulation.Scale.Length / Math.Sqrt(2);//デフォで(1,1)なので2^(-0.5)倍
                          if (scaleing == 0.0 || (scaleing == 1.0 && e.DeltaManipulation.Translation.Length == 0.0)) return;
 
                          #region get control
-                         var viewer = e.Source as ScrollViewer;//こいつはScrollViewerから直接発火
-                         if (viewer == null) return;
-
+                         var viewer = e.Source as ScrollViewer;//PotCanvas以外から発火
+                         if (viewer == null)
+                         {
+                             return;
+                         }
                          #endregion
 
                          var canvas = viewer.Descendants<Canvas>().ToArray()[0];
                          if (!canvas.IsStylusOver) return;//バー上でのタッチイベントは無視
+                         e.Handled = true;
 
                          double viewHOffset = viewer.HorizontalOffset,
                              viewVOffset = viewer.VerticalOffset;
@@ -407,18 +514,31 @@ namespace ABU2021_ControlAndDebug.ViewModels
                          {
                              matrix.ScaleAt(scaleing, scaleing, e.ManipulationOrigin.X, e.ManipulationOrigin.Y);
                              canvas.LayoutTransform = new MatrixTransform(matrix);
+                             PotHitboxDiameter /= scaleing;
                          }
 
                          viewer.ScrollToHorizontalOffset((e.ManipulationOrigin.X + viewHOffset) * scaleing - e.ManipulationOrigin.X - e.DeltaManipulation.Translation.X);
                          viewer.ScrollToVerticalOffset((e.ManipulationOrigin.Y + viewVOffset) * scaleing - e.ManipulationOrigin.Y - e.DeltaManipulation.Translation.Y);
                      }));
             }
-            set { }
         }
         #endregion
 
 
         #region Method
+        private bool PotClick(Core.ControlType.Pot pot)
+        {
+            if (TR.IsEnabaled)
+            {
+                TR.AddInjectQueue(pot, 0);
+                return true;
+            }
+            return false;
+        }
+
+
+
+
         private Vector RealToCanvas(Point realPoint)
         {
             return new Vector(realPoint.X * MapScale.X + MapWidth * 0.5, MapHeight - realPoint.Y * MapScale.Y - MapHeight * 0.5);
@@ -434,7 +554,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
 
         private void MapProperty_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if(e.PropertyName == nameof(MapProperty.Pot1RightPos))
+            if (e.PropertyName == nameof(MapProperty.Pot1RightPos))
             {
                 Pot1RightPoint = RealToCanvas(MapProperty.Pot1RightPos);
             }
@@ -459,6 +579,10 @@ namespace ABU2021_ControlAndDebug.ViewModels
                 Pot3Point = RealToCanvas(MapProperty.Pot3Pos);
                 var v = MapProperty.Pot3Pos - Models.MapProperty.Tabele3Point;
                 Table3Rot = Math.Atan2(v.Y, -v.X) * 180.0 / Math.PI;
+            }
+            else if (e.PropertyName == nameof(MapProperty.IsTeamRed))
+            {
+                TeamColor = new SolidColorBrush(MapProperty.IsTeamRed ? Colors.Red : Colors.Blue);
             }
         }
         private void TR_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -520,8 +644,6 @@ namespace ABU2021_ControlAndDebug.ViewModels
                 IsMachineEnabled = DR.IsEnabaled;
             }
         }
-
-
         private void Communicator_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if(e.PropertyName == nameof(Communicator.Device))

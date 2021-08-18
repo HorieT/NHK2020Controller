@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -83,7 +84,8 @@ namespace ABU2021_ControlAndDebug.Core
             }
             else if (Data.GetType().IsArray)
             {
-                data = string.Join(", ", Data);
+                var array = Data as IEnumerable;
+                data = string.Join(",", array.Cast<object>());
             }
             else//自己定義型(複数データ列)
             {

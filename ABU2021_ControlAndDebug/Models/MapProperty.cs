@@ -14,7 +14,7 @@ namespace ABU2021_ControlAndDebug.Models
         public static readonly Vector MapSize = new Vector(12.0000, 12.0000);
         public static readonly Vector TabeleSize = new Vector(-1.1500, 0.3300);//もろもろの都合上符号反転
 
-        public static readonly double PotOuterDiameter = 0.300;
+        public static readonly double PotOuterDiameter = 0.315;
         public static readonly double Pot1Diameter = 0.2980;
         public static readonly double Pot2Diameter = 0.2500;
         public static readonly double Pot3Diameter = 0.1580;
@@ -53,6 +53,7 @@ namespace ABU2021_ControlAndDebug.Models
         private Vector _pot2FrontPos;
         private Vector _pot2BackPos;
         private Vector _pot3Pos;
+        private bool _isTeamRed = false;
 
 
         public BitmapImage MapPictureSoruce
@@ -95,11 +96,24 @@ namespace ABU2021_ControlAndDebug.Models
             get => _pot3Pos;
             set { SetProperty(ref _pot3Pos, value); }
         }
+        public bool IsTeamRed
+        {
+            get => _isTeamRed;
+            set 
+            { 
+                if (SetProperty(ref _isTeamRed, value))
+                {
+                    MapPictureSoruce = CreateBitmapImg(Properties.Resources.Map, value ? Rotation.Rotate180 : Rotation.Rotate0);
+                    Table2PictureSoruce = CreateBitmapImg(Properties.Resources.Pot2, value ? Rotation.Rotate180 : Rotation.Rotate0);
+                    Table3PictureSoruce = CreateBitmapImg(Properties.Resources.Pot3, value ? Rotation.Rotate180 : Rotation.Rotate0);
+                } 
+            }
+        }
         #endregion
 
 
         #region Method
-        private static BitmapImage CreateBitmapImg(Bitmap bitmap)
+        private static BitmapImage CreateBitmapImg(Bitmap bitmap, Rotation rotation = Rotation.Rotate0)
         {
             // BitmapImageを初期化
             var bitmapImage = new System.Windows.Media.Imaging.BitmapImage();
@@ -116,9 +130,11 @@ namespace ABU2021_ControlAndDebug.Models
                 // MemoryStreamを書き込む
                 bitmapImage.StreamSource = ms;
                 //
+                bitmapImage.Rotation = rotation;
                 bitmapImage.EndInit();
-                // ここでFreezeしておくといいらしい(参考資料参照)
+                // ここでFreezeしておくといいらしい(参考資料参照)<-どこ？
                 bitmapImage.Freeze();
+                ms.Dispose();
             }
             return bitmapImage;
         }

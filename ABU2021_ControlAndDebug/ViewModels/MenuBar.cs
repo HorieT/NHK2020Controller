@@ -17,6 +17,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
         public Models.Communicator Communicator{ get; private set; }
         public Models.JoypadHandl Joypad { get; private set; }
         public Models.DebugSate DebugSate { get; private set; }
+        public Models.MapProperty MapProperty { get; private set; }
         #endregion
 
 
@@ -270,6 +271,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
             Communicator = Models.Communicator.GetInstance;
             Joypad = Models.JoypadHandl.GetInstance;
             DebugSate = Models.DebugSate.GetInstance;
+            MapProperty = Models.MapProperty.GetInstance;
 
             Communicator.PropertyChanged += Communicator_PropertyChanged;
             Joypad.PropertyChanged += Joypad_PropertyChanged;
@@ -277,6 +279,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
                 "ジョイパッド無し" :
                 "ジョイパッドあり" + (Joypad.IsEnabled ? "(有効)" : "(無効)");
             IsCheckedJoypad = Joypad.IsEnabled;
+            WifiSSID = "Wifi : " + Communicator.NetworkName;
         }
 
 

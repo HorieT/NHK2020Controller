@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace ABU2021_ControlAndDebug.Core
 {
@@ -51,12 +52,27 @@ namespace ABU2021_ControlAndDebug.Core
 
         public enum Pot : int
         {
-            _1Left  = 0,
-            _1Right = 1,
+            _1Right = 0,
+            _1Left = 1,
             _2Front = 2,
             _2Back  = 3,
             _3      = 4,
         }
+        public static readonly Color[] PotsColor = {
+            new Color{R = 255, G = 255, B = 127, A = 255},//60
+            new Color{R = 191, G = 255, B = 127, A = 255},//90
+            new Color{R = 127, G = 255, B = 127, A = 255},//120
+            new Color{R = 127, G = 255, B = 191, A = 255},//150
+            new Color{R = 127, G = 255, B = 255, A = 255},//180
+        };
+        public static readonly string[] PotsName = {
+            "1型右 [0]",
+            "1型左 [1]",
+            "2型前 [2]",
+            "2型奥 [3]",
+            "3型   [4]",
+        };
+
 
         public static Device ToDevice(UsbBoardPid pid)
         {

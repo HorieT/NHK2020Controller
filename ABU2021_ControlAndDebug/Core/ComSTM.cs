@@ -21,12 +21,12 @@ namespace ABU2021_ControlAndDebug.Core
         private SerialPort _port;
         private ConcurrentQueue<ReceiveDataMsg> _readMsgQueue = new ConcurrentQueue<ReceiveDataMsg>();
         private List<byte> _readDataBuff = new List<byte>();
-        private bool _isConencted = false;
         private Task _readTask;
+        private static System.Threading.SemaphoreSlim _semaphore = new System.Threading.SemaphoreSlim(1, 1);
 
 
         #region Property
-        public bool IsConnected { get => _isConencted; }
+        public bool IsConnected { get => _port?.IsOpen ?? false; }
         public ControlType.UsbBoardPid BoardType{ get; private set; }
         #endregion
 
@@ -85,7 +85,6 @@ namespace ABU2021_ControlAndDebug.Core
                 _port.RtsEnable = true;
                 try { _port.Open(); }
                 catch { throw; }
-                _isConencted = true;
                 _readTask = ReadData();
             });
         }
@@ -102,10 +101,6 @@ namespace ABU2021_ControlAndDebug.Core
             {
                 Trace.WriteLine("Disconnect error. -> " + ex.ToString() + " : " + ex.Message);
             }
-            finally
-            {
-                _isConencted = false;
-            }
         }
 
         /// <summary>
@@ -119,6 +114,7 @@ namespace ABU2021_ControlAndDebug.Core
             if (!IsConnected) throw new System.IO.IOException("Nonconnected");
             try
             {
+                await _semaphore.WaitAsync(); // ロックを取得する
                 await Task.Run(() =>
                 {
                     var sendData = COBS_Encode(msg.ConvByte());
@@ -137,6 +133,10 @@ namespace ABU2021_ControlAndDebug.Core
             catch
             {
                 throw;
+            }
+            finally
+            {
+                _semaphore.Release();
             }
 
         }
@@ -219,7 +219,7 @@ namespace ABU2021_ControlAndDebug.Core
             return Task.Run(() =>
             {
                 int byteData = -1;
-                while (_isConencted)
+                while (IsConnected)
                 {
                     try
                     {

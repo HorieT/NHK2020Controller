@@ -108,11 +108,14 @@
     <Compile Include="Models\JoypadHandl.cs" />
     <Compile Include="Models\MapProperty.cs" />
     <Compile Include="Models\OutputLog.cs" />
+    <Compile Include="PotColorConverter.cs" />
+    <Compile Include="PotNameConverter.cs" />
     <Compile Include="SubWindows\JoypadTestWindow.xaml.cs">
       <DependentUpon>JoypadTestWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ViewModels\ControlTabTR.cs" />
     <Compile Include="ViewModels\JoypadTest.cs" />
+    <Compile Include="ViewModels\MainWindow.cs" />
     <Compile Include="ViewModels\MapControl.cs" />
     <Compile Include="ViewModels\MenuBar.cs" />
     <Compile Include="ViewModels\OutputLog.cs" />

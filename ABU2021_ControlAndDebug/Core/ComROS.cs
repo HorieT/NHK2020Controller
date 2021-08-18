@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace ABU2021_ControlAndDebug.Core
 {
@@ -14,14 +15,14 @@ namespace ABU2021_ControlAndDebug.Core
     {
         //private InterfaceWifi _wifi;
         //private InterfaceBT _bluetooth;
+        private TcpClient _client;
         private NetworkStream _wifiStream;
         private StreamReader _wifiReader;//ネーミングセンス皆無
         //private StreamWriter _wifiWriter;//ネーミングセンス皆無
-        private bool _isConencted = false;
-
+        private static System.Threading.SemaphoreSlim _semaphore = new System.Threading.SemaphoreSlim(1, 1);
 
         #region Property
-        public bool IsConnected { get => _isConencted; }
+        public bool IsConnected { get => _client?.Connected ?? false; }
         public ControlType.TcpPort Port { get; set; }
         #endregion
 
@@ -55,12 +56,11 @@ namespace ABU2021_ControlAndDebug.Core
                     var ip = ControlType.TCP_IP_ADDRESS;
 #endif
                     Trace.WriteLine("Tcp cliant IP : " + ip);
-                    var _client = new System.Net.Sockets.TcpClient(ip, (int)Port);
-                    _wifiStream = _client.GetStream();
-                    _wifiReader = new StreamReader(_wifiStream, Encoding.UTF8);
+                    _client = new System.Net.Sockets.TcpClient(ip, (int)Port);
                 }
                 catch { throw; }
-                _isConencted = true;
+                _wifiStream = _client.GetStream();
+                _wifiReader = new StreamReader(_wifiStream, Encoding.UTF8);
             });
         }
 
@@ -76,10 +76,6 @@ namespace ABU2021_ControlAndDebug.Core
             {
                 Trace.WriteLine("Disconnect error. -> " + ex.ToString() + " : " + ex.Message);
             }
-            finally
-            {
-                _isConencted = false;
-            }
         }
 
 
@@ -92,10 +88,19 @@ namespace ABU2021_ControlAndDebug.Core
         public async Task SendMsgAsync(SendDataMsg msg)
         {
             if (!IsConnected) throw new InvalidOperationException("Nonconnected");
-            
+            byte[] data;
             try
             {
-                byte[] data = Encoding.UTF8.GetBytes(msg.ConvString() + "\n");
+                 data = Encoding.UTF8.GetBytes(msg.ConvString() + "\n");
+            }
+            catch(Exception)
+            {
+                Trace.WriteLine("SendMsg convert error -> " + msg.Header.ToString() + ":" + msg.Data.ToString());
+                return;
+            }
+            await _semaphore.WaitAsync(); // ロックを取得する
+            try
+            {
                 await _wifiStream.WriteAsync(data, 0, data.Length);
             }
             catch
@@ -103,12 +108,16 @@ namespace ABU2021_ControlAndDebug.Core
                 Disconnect();
                 throw;
             }
+            finally
+            {
+                _semaphore.Release();
+            }
         }
 
 
         public async Task<ReceiveDataMsg> ReadMsgAsync()
         {
-            while (_isConencted)
+            while (IsConnected)
             {
                 var data = await _wifiReader.ReadLineAsync();
                 if (data == null) continue;
