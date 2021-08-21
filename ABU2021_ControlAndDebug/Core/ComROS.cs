@@ -56,9 +56,14 @@ namespace ABU2021_ControlAndDebug.Core
                     var ip = ControlType.TCP_IP_ADDRESS;
 #endif
                     Trace.WriteLine("Tcp cliant IP : " + ip);
-                    _client = new System.Net.Sockets.TcpClient(ip, (int)Port);
+                    _client = new System.Net.Sockets.TcpClient();
+                    if (!_client.ConnectAsync(ip, (int)Port).Wait(1000)) throw new TimeoutException("TCP connection timeouted : 1000ms");
                 }
-                catch { throw; }
+                catch (Exception ex){
+                    _client = null;
+                    Trace.WriteLine("TCP server connect failed ->" + ex.Message);
+                    throw;
+                }
                 _wifiStream = _client.GetStream();
                 _wifiReader = new StreamReader(_wifiStream, Encoding.UTF8);
             });

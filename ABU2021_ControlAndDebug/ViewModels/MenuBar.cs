@@ -137,9 +137,10 @@ namespace ABU2021_ControlAndDebug.ViewModels
                                 {
                                     await Communicator.ConnectRosAsync(Core.ControlType.TcpPort.TR);
                                 }
-                                catch
+                                catch(Exception ex)
                                 {
                                     Log.WiteLine("接続失敗");
+                                    Log.WiteDebugMsg(ex.Message);
                                     IsEnableConnect = true;
                                     IsCheckedRosWifi = false;
                                     return;
