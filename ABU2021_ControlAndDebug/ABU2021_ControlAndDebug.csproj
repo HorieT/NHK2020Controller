@@ -113,6 +113,9 @@
     <Compile Include="SubWindows\JoypadTestWindow.xaml.cs">
       <DependentUpon>JoypadTestWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="SubWindows\SetArrowNumWindow.xaml.cs">
+      <DependentUpon>SetArrowNumWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ViewModels\ControlTabTR.cs" />
     <Compile Include="ViewModels\JoypadTest.cs" />
     <Compile Include="ViewModels\MainWindow.cs" />
@@ -132,6 +135,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="SubWindows\JoypadTestWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SubWindows\SetArrowNumWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

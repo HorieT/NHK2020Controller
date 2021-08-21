@@ -29,6 +29,7 @@ namespace ABU2021_ControlAndDebug.Core
             INJECT_Q,
             M_STATE,
             M_SEQUENCE,
+            OFFSET_RAD,
             //debug
             DEBUG_POS = 0xF0
         }
@@ -64,6 +65,9 @@ namespace ABU2021_ControlAndDebug.Core
                         break;
                     case HeaderType.I_ANGLE:
                         Data = float.Parse(msgData);
+                        break;
+                    case HeaderType.OFFSET_RAD:
+                        Data = double.Parse(msgData);
                         break;
                     case HeaderType.INJECT_Q:
                         //int[]

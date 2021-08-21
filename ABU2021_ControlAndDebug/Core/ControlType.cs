@@ -59,11 +59,11 @@ namespace ABU2021_ControlAndDebug.Core
             _3      = 4,
         }
         public static readonly Color[] PotsColor = {
-            new Color{R = 255, G = 255, B = 127, A = 255},//60
+            new Color{R = 255, G = 180, B = 127, A = 255},//25
+            new Color{R = 255, G = 233, B = 127, A = 255},//50
             new Color{R = 191, G = 255, B = 127, A = 255},//90
             new Color{R = 127, G = 255, B = 127, A = 255},//120
-            new Color{R = 127, G = 255, B = 191, A = 255},//150
-            new Color{R = 127, G = 255, B = 255, A = 255},//180
+            new Color{R = 127, G = 255, B = 255, A = 191},//150
         };
         public static readonly string[] PotsName = {
             "1型右 [0]",

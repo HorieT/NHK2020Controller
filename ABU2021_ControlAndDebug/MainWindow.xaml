@@ -409,15 +409,13 @@
 
 
             <TabControl Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" Margin="5, 0, 0, 0"  FontSize="18">
-                <TabItem Header="無効">
-
-                </TabItem>
-                <TabItem Header="TR" IsEnabled="{Binding IsEnabed, Mode=OneWay}">
+                <TabItem Header="TR">
                     <TabItem.DataContext>
                         <vmodel:ControlTabTR/>
                     </TabItem.DataContext>
-                    <DockPanel IsEnabled="{Binding IsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=TabItem}}">
-                        <GroupBox DockPanel.Dock="Top" Header="ステータス" FontSize="12">
+                    
+                    <DockPanel IsEnabled="{ Binding IsEnabled}">
+                        <GroupBox DockPanel.Dock="Top" Header="ステータス" FontSize="10">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -426,10 +424,10 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="0.5*"/>
+                                    <ColumnDefinition Width="1*"/>
                                     <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition Width="1*"/>
                                     <ColumnDefinition Width="2*"/>
-                                    <ColumnDefinition Width="0.5*"/>
                                 </Grid.ColumnDefinitions>
 
                                 <TextBlock 
@@ -452,33 +450,153 @@
                                     Text="ステータス"
                                     Grid.Row="1"
                                     Grid.Column="0"
-                                    Grid.ColumnSpan="2"
-                                    Margin="2"
                                     VerticalAlignment="Center"
                                     HorizontalAlignment="Right"/>
                                 <TextBox 
                                     Grid.Row="1"
-                                    Grid.Column="2"
+                                    Grid.Column="1"
                                     Margin="2"
                                     IsReadOnly="True"
                                     TextAlignment="Right"
                                     Text="{Binding TR.MachineState, Mode=OneWay}"/>
                                 <TextBlock 
                                     Text="シーケンス"
-                                    Grid.Row="2"
-                                    Grid.Column="0"
-                                    Grid.ColumnSpan="2"
-                                    Margin="2"
+                                    Grid.Row="1"
+                                    Grid.Column="2"
                                     VerticalAlignment="Center"
                                     HorizontalAlignment="Right"/>
                                 <TextBox 
-                                    Grid.Row="2"
-                                    Grid.Column="2"
+                                    Grid.Row="1"
+                                    Grid.Column="3"
                                     Margin="2"
                                     IsReadOnly="True"
                                     TextAlignment="Right"
                                     Text="{Binding TR.MachineSequence, Mode=OneWay}"/>
                             </Grid>
+                        </GroupBox>
+                        <GroupBox DockPanel.Dock="Top" Header="矢ステータス" FontSize="10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+                                <Button 
+                                    Grid.Column="0"
+                                    Content="機体上" 
+                                    FontSize="16"
+                                    Margin="10,5,10,5"
+                                    Command="{Binding ArrowNumOnMachineButton_Click}"
+                                    CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"/>
+                                <Button
+                                    Grid.Column="1"
+                                    Content="ラック" 
+                                    FontSize="16"
+                                    Height="30"
+                                    Margin="10,5,10,5"
+                                    Command="{Binding ArrowNumOnRackButton_Click}"
+                                    CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"/>
+                            </Grid>
+                        </GroupBox>
+                        <GroupBox DockPanel.Dock="Top" Header="射出角オフセット" FontSize="10">
+                            <StackPanel Orientation="Vertical">
+                                <Grid Margin="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="15"/>
+                                        <ColumnDefinition Width="1*"/>
+                                        <ColumnDefinition Width="15"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Slider
+                                        Grid.Column="1"
+                                        Maximum="{Binding OffsetRadMax, Mode=OneTime}"
+                                        Minimum="{Binding OffsetRadMin, Mode=OneTime}"
+                                        SmallChange="{Binding OffsetRadSliderSmall, Mode=OneTime}"
+                                        LargeChange="{Binding OffsetRadSliderLarge, Mode=OneTime}"
+                                        Value="{Binding OffsetRad}"
+                                        IsDirectionReversed="True"/>
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        Text="{Binding OffsetDegMaxText}"
+                                        HorizontalAlignment="Right"/>
+                                    <TextBlock
+                                        Grid.Column="2"
+                                        Text="{Binding OffsetDegMinText}"
+                                        HorizontalAlignment="Left"/>
+                                </Grid>
+                                <Grid Margin="7">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="5*"/>
+                                        <ColumnDefinition Width="2*"/>
+                                        <ColumnDefinition Width="5*"/>
+                                        <ColumnDefinition Width="2*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox
+                                        Grid.Column="0"
+                                        Text="{Binding OffsetDegText}"
+                                        IsEnabled="{Binding OffsetRadIsEq}"
+                                        FontSize="20"
+                                        Margin="5"
+                                        CommandManager.PreviewExecuted="{mvvm:InvokeCommand NoPasteTextBox_PreviewExecuted}"
+                                        PreviewKeyDown="{mvvm:InvokeCommand InputDataTextBox_PreviewKeyDown}"
+                                        PreviewTextInput="{mvvm:InvokeCommand DecimalTextBox_PreviewTextInput}"
+                                        LostFocus="{mvvm:InvokeCommand OffsetDegBox_LostFocus}"
+                                        TextAlignment="Right"/>
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        Text="°"
+                                        Margin="5"
+                                        VerticalAlignment="Top"
+                                        HorizontalAlignment="Left"/>
+                                    <TextBox
+                                        Grid.Column="2"
+                                        Text="{Binding OffsetRadText}"
+                                        IsEnabled="{Binding OffsetRadIsEq}"
+                                        FontSize="20"
+                                        Margin="5"
+                                        CommandManager.PreviewExecuted="{mvvm:InvokeCommand NoPasteTextBox_PreviewExecuted}"
+                                        PreviewKeyDown="{mvvm:InvokeCommand InputDataTextBox_PreviewKeyDown}"
+                                        PreviewTextInput="{mvvm:InvokeCommand DecimalTextBox_PreviewTextInput}"
+                                        LostFocus="{mvvm:InvokeCommand OffsetRadBox_LostFocus}"
+                                        TextAlignment="Right"/>
+                                    <TextBlock
+                                        Grid.Column="3"
+                                        Text="rad"
+                                        Margin="5"
+                                        VerticalAlignment="Bottom"
+                                        HorizontalAlignment="Left"/>
+                                </Grid>
+                                <Grid Height="35">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="1*"/>
+                                        <ColumnDefinition Width="1*"/>
+                                        <ColumnDefinition Width="1*"/>
+                                        <ColumnDefinition Width="1*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button
+                                        Grid.Column="0"
+                                        Margin="3"
+                                        FontSize="8"
+                                        Command="{Binding OffsetDegIncLButton_Click}"
+                                        Content="&lt;&lt;[0.5°]"/>
+                                    <Button
+                                        Grid.Column="1"
+                                        Margin="3"
+                                        FontSize="8"
+                                        Command="{Binding OffsetDegIncSButton_Click}"
+                                        Content="&lt;&lt;[0.05°]"/>
+                                    <Button
+                                        Grid.Column="2"
+                                        Margin="3"
+                                        FontSize="8"
+                                        Command="{Binding OffsetDegDecSButton_Click}"
+                                        Content="[-0.05°] &gt;&gt;"/>
+                                    <Button
+                                        Grid.Column="3"
+                                        Margin="3"
+                                        FontSize="8"
+                                        Command="{Binding OffsetDegDecLButton_Click}"
+                                        Content="[-0.5°] &gt;&gt;"/>
+                                </Grid>
+                            </StackPanel>
                         </GroupBox>
 
                         <GroupBox DockPanel.Dock="Bottom" Header="射出キュー" FontSize="10">
@@ -570,8 +688,8 @@
                                         TextAlignment="Right"
                                         Text="{Binding InjectSpeedText}"
                                         CommandManager.PreviewExecuted="{mvvm:InvokeCommand NoPasteTextBox_PreviewExecuted}"
-                                        PreviewTextInput="{mvvm:InvokeCommand InjectTextBox_PreviewTextInput}"
                                         PreviewKeyDown="{mvvm:InvokeCommand InputDataTextBox_PreviewKeyDown}"
+                                        PreviewTextInput="{mvvm:InvokeCommand DecimalTextBox_PreviewTextInput}"
                                         LostFocus="{mvvm:InvokeCommand InjectTextBox_LostFocus}"/>
                                     <TextBlock 
                                         Text="m/s"

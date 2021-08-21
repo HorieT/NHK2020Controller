@@ -29,6 +29,9 @@ namespace ABU2021_ControlAndDebug.Core
             INJECT_POT,
             INJECT_Q_INS,
             INJECT_Q_DEL,
+            M_ARROW,
+            RACK_ARROW,
+            OFFSET_RAD,
         }
         public static readonly Dictionary<HeaderType, Type> DataType = new Dictionary<HeaderType, Type>
         {
@@ -39,6 +42,9 @@ namespace ABU2021_ControlAndDebug.Core
             {HeaderType.INJECT_POT,     typeof(int)},
             {HeaderType.INJECT_Q_INS,   typeof(int[])},
             {HeaderType.INJECT_Q_DEL,   typeof(int)},
+            {HeaderType.M_ARROW,        typeof(int)},
+            {HeaderType.RACK_ARROW,     typeof(int)},
+            {HeaderType.OFFSET_RAD,     typeof(double)},
         };
         #endregion
 
@@ -74,9 +80,13 @@ namespace ABU2021_ControlAndDebug.Core
             string head = Header.ToString();
             string data;
             
-            if(Data is float d)//浮動小数点型
+            if(Data is float f)//浮動小数点型
             {
-                data = d.ToString("F3");
+                data = f.ToString("F3");
+            }
+            if (Data is double d)//倍精度浮動小数点型
+            {
+                data = d.ToString("F4");
             }
             else if(Data.GetType().IsPrimitive)//その他プリミティブ型
             {

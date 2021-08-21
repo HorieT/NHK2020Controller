@@ -39,7 +39,7 @@ namespace ABU2021_ControlAndDebug.Models
         }
 
         private Stopwatch _stopwatch;
-        private List<DebugData> _debugDatas;
+        private List<DebugData> _debugDatas = new List<DebugData>();
 
 
         #region Singleton instance
@@ -86,6 +86,7 @@ namespace ABU2021_ControlAndDebug.Models
         private string _machineState;
         private string _machineSequence;
         private ObservableCollection<Core.ControlType.Pot> _potsQueue = new ObservableCollection<Core.ControlType.Pot>();
+        private double _offsetRad;
 
 
         #endregion
@@ -137,6 +138,11 @@ namespace ABU2021_ControlAndDebug.Models
             private set { 
                 if(!_potsQueue.SequenceEqual(value))SetProperty(ref _potsQueue, value); } 
         }
+        public double OffsetRad
+        {
+            get => _offsetRad;
+            private set { SetProperty(ref _offsetRad, value); }
+        }
         #endregion
         #endregion
         #endregion
@@ -173,6 +179,26 @@ namespace ABU2021_ControlAndDebug.Models
         {
             if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), "Negative value cannot be set");
             _communicator.SendMsg(new Core.SendDataMsg(Core.SendDataMsg.HeaderType.INJECT_Q_DEL, index));
+        }
+
+        public void SetArrowNumOnMachine(int num) 
+        {
+            if (0 > num && num > 5) throw new ArgumentOutOfRangeException("Arrow num range is 0~5. ");
+            _communicator.SendMsg(new Core.SendDataMsg(Core.SendDataMsg.HeaderType.M_ARROW, num));
+            _log.WiteLine("マシン上の矢数 : " + num.ToString() + " 本");
+
+        }
+        public void SetArrowNumOnRack(int num)
+        {
+            if (0 > num && num > 5) throw new ArgumentOutOfRangeException("Arrow num range is 0~5. ");
+            _communicator.SendMsg(new Core.SendDataMsg(Core.SendDataMsg.HeaderType.RACK_ARROW, num));
+            _log.WiteLine("ラック上の矢数 : " + num.ToString() + " 本");
+        }
+        public void SetRadOffset(double rad)
+        {
+            if (double.IsNaN(rad) || double.IsInfinity(rad)) throw new ArgumentException("Rad value isn't finite.");
+            _communicator.SendMsg(new Core.SendDataMsg(Core.SendDataMsg.HeaderType.OFFSET_RAD, rad));
+            _log.WiteLine("オフセットの更新要求 : " + rad.ToString() + " rad");
         }
 
 
@@ -279,6 +305,9 @@ namespace ABU2021_ControlAndDebug.Models
                             break;
                         case Core.ReceiveDataMsg.HeaderType.M_SEQUENCE:
                             MachineSequence = (msg.Data as string);
+                            break;
+                        case Core.ReceiveDataMsg.HeaderType.OFFSET_RAD:
+                            OffsetRad = (double)msg.Data;
                             break;
                         case Core.ReceiveDataMsg.HeaderType.POT_POS:
                             {
