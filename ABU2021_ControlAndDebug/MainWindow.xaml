@@ -21,6 +21,8 @@
         <vmodel:MainWindow/>
     </Window.DataContext>
     <Window.InputBindings>
+        <KeyBinding Gesture="Ctrl+DbeSbcsChar" Command="{Binding Ctrl0}"/><!-- Ctrl+Oem3 -->
+        <KeyBinding Gesture="Ctrl+OemEnlw" Command="{Binding Ctrl0}"/><!-- Ctrl+Oem3 -->
         <KeyBinding Gesture="Ctrl+0" Command="{Binding Ctrl0}"/>
         <KeyBinding Gesture="Ctrl+1" Command="{Binding Ctrl1}"/>
         <KeyBinding Gesture="Ctrl+2" Command="{Binding Ctrl2}"/>
@@ -80,7 +82,7 @@
                         </MenuItem.ToolTip>
                     </MenuItem>
                 </MenuItem>
-                <MenuItem Header="表示(_V)" DockPanel.Dock="Left">
+                <MenuItem Header="表示(_V)" DockPanel.Dock="Left" Height="21" VerticalAlignment="Top">
                     <MenuItem Header="ジョイパッド入力(_I)" IsEnabled="{Binding IsCheckedJoypad}" 
                               Command="{Binding ViewJoypad_Click}" CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"/>
                     <Separator/>
@@ -112,6 +114,7 @@
                     <ScrollViewer HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" 
                                   IsManipulationEnabled="True"
                                   PanningMode="None"
+                                  KeyDown="{mvvm:InvokeCommand Test_KeyDown}"
                                   PreviewMouseWheel="{mvvm:InvokeCommand ScrollViewer_PreviewMouseWheel}" 
                                   PreviewMouseMove="{mvvm:InvokeCommand ScrollViewer_MouseMove}"
                                   PreviewMouseDown="{mvvm:InvokeCommand ScrollViewer_MouseDown}" 
@@ -320,6 +323,19 @@
                                            Width="{Binding MachineSize.Y}"
                                            Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}">
                                 </TextBlock>
+                                <Path
+                                    Stroke="Khaki"
+                                    StrokeThickness="10"
+                                    Data="M0,0 L0,-8000"/>
+                                <!--2度線 後でちゃんとバインドします-->
+                                <Path
+                                    Stroke="Indigo"
+                                    StrokeThickness="8"
+                                    Data="M0,0 L280,-8018"/>
+                                <Path
+                                    Stroke="Indigo"
+                                    StrokeThickness="8"
+                                    Data="M0,0 L-280,-8018"/>
                             </Canvas>
                             <!--#endregion-->
 
@@ -512,7 +528,8 @@
                                         SmallChange="{Binding OffsetRadSliderSmall, Mode=OneTime}"
                                         LargeChange="{Binding OffsetRadSliderLarge, Mode=OneTime}"
                                         Value="{Binding OffsetRad}"
-                                        IsDirectionReversed="True"/>
+                                        IsDirectionReversed="True">
+                                    </Slider>
                                     <TextBlock
                                         Grid.Column="0"
                                         Text="{Binding OffsetDegMaxText}"

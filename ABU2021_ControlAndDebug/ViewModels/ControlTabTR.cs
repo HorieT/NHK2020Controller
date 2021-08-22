@@ -452,9 +452,18 @@ namespace ABU2021_ControlAndDebug.ViewModels
                         OffsetRadIsEq = false;
                         return;
                     }
+                    else
+                    {
+                        _offsetRad = TR.OffsetRad;
+                        _offsetRadText = _offsetRad.ToString("F4");
+                        _offsetDegText = (_offsetRad != 0.0 ? _offsetRad * 180.0 / Math.PI : 0.0).ToString("F3");
+                        RaisePropertyChanged(nameof(OffsetRad));
+                        RaisePropertyChanged(nameof(OffsetRadText));
+                        RaisePropertyChanged(nameof(OffsetDegText));
+                    }
                 }
-                //表示値更新
-                _offsetRad = TR.OffsetRad;
+                //表示値有効化
+                _isOffsetRadSending = false;
                 OffsetRadIsEq = true;
             }
         }

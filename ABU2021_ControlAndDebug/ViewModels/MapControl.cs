@@ -31,6 +31,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
         public Models.ControlTR TR{ get; private set; }
         public Models.ControlDR DR { get; private set; }
         public Models.Communicator Communicator { get; set; }
+        public Models.DebugSate DebugSate { get; private set; }
         #endregion
 
 
@@ -42,6 +43,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
             TR = Models.ControlTR.GetInstance;
             DR = Models.ControlDR.GetInstance;
             Communicator = Models.Communicator.GetInstance;
+            DebugSate = Models.DebugSate.GetInstance;
             #endregion
 
             #region set img
@@ -57,6 +59,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
             TR.PropertyChanged += TR_PropertyChanged;
             DR.PropertyChanged += DR_PropertyChanged;
             Communicator.PropertyChanged += Communicator_PropertyChanged;
+            DebugSate.PropertyChanged += DebugSate_PropertyChanged;
         }
 
 
@@ -259,6 +262,8 @@ namespace ABU2021_ControlAndDebug.ViewModels
         #endregion
 
 
+
+
         #region Command
         private ICommand _scrollViewer_PreviewMouseWheel;
         private ICommand _scrollViewer_MouseDown;
@@ -267,6 +272,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
         private ICommand _scrollViewer_ManipulationStarting;
         private ICommand _scrollViewer_ManipulationCompleted;
         private ICommand _scrollViewer_ManipulationDelta;
+        private ICommand _test_KeyDown;
 
         /// <summary>
         /// ScrollViewer上でのホイール回転をキャプチャ
@@ -522,6 +528,18 @@ namespace ABU2021_ControlAndDebug.ViewModels
                      }));
             }
         }
+        public ICommand Test_KeyDown
+        {
+            get => _test_KeyDown ??
+                (_test_KeyDown = CreateCommand(
+                    (KeyEventArgs e) =>
+                    {
+                        if (DebugSate.IsUnlockUI)
+                        {
+                            Log.WiteLine(e.Key.ToString());
+                        }
+                    }));
+        }
         #endregion
 
 
@@ -650,6 +668,9 @@ namespace ABU2021_ControlAndDebug.ViewModels
             {
                 MachineName = Communicator.Device.ToString();
             }
+        }
+        private void DebugSate_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
         }
 
         #region Converter
