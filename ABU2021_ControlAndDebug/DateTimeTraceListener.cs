@@ -184,9 +184,16 @@ namespace ABU2021_ControlAndDebug
             {
                 Close();
             }
-            if (_stream != null && _baseStream.Length > MaxSize)
+            try
             {
-                Close();
+                if (_stream != null && _baseStream.Length > MaxSize)
+                {
+                    Close();
+                }
+            }
+            catch
+            {
+                return false;
             }
             if (_stream == null)
             {

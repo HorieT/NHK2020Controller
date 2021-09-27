@@ -24,6 +24,7 @@ namespace ABU2021_ControlAndDebug.Core
         #region Property
         public bool IsConnected { get => _client?.Connected ?? false; }
         public ControlType.TcpPort Port { get; set; }
+        public string IP { get; set; }
         #endregion
 
 
@@ -53,11 +54,11 @@ namespace ABU2021_ControlAndDebug.Core
 #if DEBUG
                     var ip = GetMyIpaddress();
 #else
-                    var ip = ControlType.TCP_IP_ADDRESS;
+                    var ip = IP ?? ControlType.TCP_IP_ADDRESS;
 #endif
                     Trace.WriteLine("Tcp cliant IP : " + ip);
                     _client = new System.Net.Sockets.TcpClient();
-                    if (!_client.ConnectAsync(ip, (int)Port).Wait(1000)) throw new TimeoutException("TCP connection timeouted : 1000ms");
+                    if (!_client.ConnectAsync(ip, (int)Port).Wait(1000)) throw new TimeoutException("TCP connection try timeouted : 1000ms");
                 }
                 catch (Exception ex){
                     _client = null;

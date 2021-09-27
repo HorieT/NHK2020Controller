@@ -85,6 +85,8 @@ namespace ABU2021_ControlAndDebug.Models
         private double _positionRot;
         private string _machineState;
         private string _machineSequence;
+        private string _msg1;
+        private string _msg2;
         private ObservableCollection<Core.ControlType.Pot> _potsQueue = new ObservableCollection<Core.ControlType.Pot>();
         private double _offsetRad;
 
@@ -133,6 +135,16 @@ namespace ABU2021_ControlAndDebug.Models
             get => _machineSequence;
             set { SetProperty(ref _machineSequence, value); }
         }
+        public string Msg1
+        {
+            get => _msg1;
+            set { SetProperty(ref _msg1, value); }
+        }
+        public string Msg2
+        {
+            get => _msg2;
+            set { SetProperty(ref _msg2, value); }
+        }
         public ObservableCollection<Core.ControlType.Pot> PotsQueue { 
             get => _potsQueue;
             private set { 
@@ -170,6 +182,12 @@ namespace ABU2021_ControlAndDebug.Models
             if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), "Negative value cannot be set");
             _communicator.SendMsg(new Core.SendDataMsg(Core.SendDataMsg.HeaderType.INJECT_Q_INS, new int[]{ (int)pot, index }));
             _log.WiteLine("ポットをキューに追加 : index " + index.ToString() + "->" + ((int)pot).ToString() + "[" + pot.ToString() + "]");
+        }
+        public void TurnPot(Core.ControlType.Pot pot)
+        {
+            if (!IsEnabaled) throw new InvalidOperationException("TR is not enbale");
+            _communicator.SendMsg(new Core.SendDataMsg(Core.SendDataMsg.HeaderType.TURN_POT, (int)pot));
+            _log.WiteLine("ポット反転 ->" + ((int)pot).ToString() + "[" + pot.ToString() + "]");
         }
         public void AddInjectQueue(Core.ControlType.Pot pot)
         {
@@ -305,6 +323,12 @@ namespace ABU2021_ControlAndDebug.Models
                             break;
                         case Core.ReceiveDataMsg.HeaderType.M_SEQUENCE:
                             MachineSequence = (msg.Data as string);
+                            break;
+                        case Core.ReceiveDataMsg.HeaderType.MSG1:
+                            Msg1 = (msg.Data as string);
+                            break;
+                        case Core.ReceiveDataMsg.HeaderType.MSG2:
+                            Msg2 = (msg.Data as string);
                             break;
                         case Core.ReceiveDataMsg.HeaderType.OFFSET_RAD:
                             OffsetRad = (double)msg.Data;

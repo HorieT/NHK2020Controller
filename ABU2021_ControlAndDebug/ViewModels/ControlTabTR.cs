@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows;
 using System.Windows.Media;
 using System.Diagnostics;
+using System.Collections.ObjectModel;
 
 namespace ABU2021_ControlAndDebug.ViewModels
 {
@@ -42,6 +43,8 @@ namespace ABU2021_ControlAndDebug.ViewModels
         private double _offsetRad = 0.000;
         private string _offsetRadText = "0.0000";
         private string _offsetDegText = "0.000";
+        private ObservableCollection<Core.ControlType.Pot> _potsQueue = new ObservableCollection<Core.ControlType.Pot>();
+
 
         public static string OffsetDegMaxText { get; } = OffsetDegMax.ToString() + "°";
         public static string OffsetDegMinText { get; } = OffsetDegMin.ToString() + "°";
@@ -106,6 +109,11 @@ namespace ABU2021_ControlAndDebug.ViewModels
             get => _offsetRadText;
             set { SetProperty(ref _offsetRadText, value); }
         }
+        public ObservableCollection<Core.ControlType.Pot> PotsQueue
+        {
+            get => _potsQueue;
+            private set { SetProperty(ref _potsQueue, value); }
+        }
         #endregion
 
 
@@ -121,11 +129,14 @@ namespace ABU2021_ControlAndDebug.ViewModels
         private ICommand _offsetDegIncSButton_Click;
         private ICommand _offsetDegDecLButton_Click;
         private ICommand _offsetDegDecSButton_Click;
+        private ICommand _slider_PreviewMouseDown;
+        private ICommand _slider_ManipulationStarting;
 
         private ICommand _injectButton_Click;
         private ICommand _injectQueue_SelectedCellChanged;
         private ICommand _arrowNumOnMachineButton_Click;
         private ICommand _arrowNumOnRackButton_Click;
+
         public ICommand NoPasteTextBox_PreviewExecuted
         {
             get
@@ -267,7 +278,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
 
                             if (deg >= OffsetDegMin && deg <= OffsetDegMax)//範囲内
                             {
-                                OffsetRad = (deg * Math.PI / 180.0);
+                                    OffsetRad = (deg * Math.PI / 180.0);
                             }
                             else
                             {
@@ -329,6 +340,33 @@ namespace ABU2021_ControlAndDebug.ViewModels
                         {
                             var rad = OffsetRad - OffsetButtonDivSmall * Math.PI / 180.0;
                             OffsetRad = (rad > OffsetRadMin) ? rad : OffsetRadMin;
+                        }));
+            }
+        }
+        public ICommand Slider_PreviewMouseDown
+        {
+            get
+            {
+                return _slider_PreviewMouseDown ??
+                    (_slider_PreviewMouseDown = CreateCommand(
+                        (MouseButtonEventArgs e) =>
+                        {
+                            OffsetRad = 0;
+                            e.Handled = true;
+                        }));
+            }
+        }
+
+        public ICommand Slider_ManipulationStarting
+        {
+            get
+            {
+                return _slider_ManipulationStarting ??
+                    (_slider_ManipulationStarting = CreateCommand(
+                        (ManipulationStartingEventArgs e) =>
+                        {
+                            OffsetRad = 0;
+                            e.Handled = true;
                         }));
             }
         }
@@ -410,7 +448,6 @@ namespace ABU2021_ControlAndDebug.ViewModels
         }
 
 
-
         #endregion
 
 
@@ -425,6 +462,9 @@ namespace ABU2021_ControlAndDebug.ViewModels
             _debugSate.PropertyChanged += _debugSate_PropertyChanged;
         }
 
+
+        #region Method
+
         private void _debugSate_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(_debugSate.IsUnlockUI))
@@ -432,14 +472,17 @@ namespace ABU2021_ControlAndDebug.ViewModels
                 IsEnabled = _debugSate.IsUnlockUI || TR.IsEnabaled;
             }
         }
-
-
-        #region Method
         private void TR_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(TR.IsEnabaled))
             {
                 IsEnabled = _debugSate.IsUnlockUI || TR.IsEnabaled;
+                return;
+            }
+
+            if(e.PropertyName == nameof(TR.PotsQueue))
+            {
+                PotsQueue = new ObservableCollection<Core.ControlType.Pot>(TR.PotsQueue.Take(5));
                 return;
             }
 

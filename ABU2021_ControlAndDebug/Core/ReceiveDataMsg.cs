@@ -29,6 +29,8 @@ namespace ABU2021_ControlAndDebug.Core
             INJECT_Q,
             M_STATE,
             M_SEQUENCE,
+            MSG1,
+            MSG2,
             OFFSET_RAD,
             //debug
             DEBUG_POS = 0xF0
@@ -56,6 +58,8 @@ namespace ABU2021_ControlAndDebug.Core
                 {
                     case HeaderType.M_SEQUENCE:
                     case HeaderType.M_STATE:
+                    case HeaderType.MSG1:
+                    case HeaderType.MSG2:
                         //string,string[]
                         Data = msgData;
                         break;

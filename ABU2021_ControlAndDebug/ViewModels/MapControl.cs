@@ -52,8 +52,17 @@ namespace ABU2021_ControlAndDebug.ViewModels
             TableHeight = MapProperty.Table2PictureSoruce.PixelHeight;
             TableWidth = MapProperty.Table2PictureSoruce.PixelWidth;
             MapScale = new Vector(MapWidth / Models.MapProperty.MapSize.X, MapHeight / Models.MapProperty.MapSize.Y);
-            PotDiameter = Models.MapProperty.PotOuterDiameter * MapScale.X;
+            Core.Pot.CommonVal.Diameter = Models.MapProperty.PotOuterDiameter * MapScale.X;
             #endregion
+
+            #region set property
+            Pots.Add(new Core.Pot { Name = "0⃣", Tag = Core.ControlType.Pot._1Right});
+            Pots.Add(new Core.Pot { Name = "1⃣", Tag = Core.ControlType.Pot._1Left });
+            Pots.Add(new Core.Pot { Name = "2⃣", Tag = Core.ControlType.Pot._2Front });
+            Pots.Add(new Core.Pot { Name = "3⃣", Tag = Core.ControlType.Pot._2Back });
+            Pots.Add(new Core.Pot { Name = "4⃣", Tag = Core.ControlType.Pot._3 });
+            #endregion
+
 
             MapProperty.PropertyChanged += MapProperty_PropertyChanged;
             TR.PropertyChanged += TR_PropertyChanged;
@@ -70,26 +79,15 @@ namespace ABU2021_ControlAndDebug.ViewModels
         private double _mapHeight;
         private double _tableWidth;
         private double _tableHeight;
-        private double _potDiameter;
         private double _table2FrontRot = 0.0;
         private double _table2BackRot = 90.0;
         private double _table3Rot = 0.0;
-        private Vector _pot1RightPoint;
-        private Vector _pot1LeftPoint;
-        private Vector _pot2FrontPoint;
-        private Vector _pot2BackPoint;
-        private Vector _pot3Point;
-        private double _potHitboxDiameter = 500.0;
-        private bool _pot1RightIsHighlighted;
-        private bool _pot1LeftIsHighlighted;
-        private bool _pot2FrontIsHighlighted;
-        private bool _pot2BackIsHighlighted;
-        private bool _pot3IsHighlighted;
         private bool _isMachineEnabled;
         private Vector _machineCenter;
         private double _machineRot;
         private string _machineName;
         private Brush _teamColor = new SolidColorBrush(Colors.Blue);
+        private ObservableNotifyCollection<Core.Pot> _pots = new ObservableNotifyCollection<Core.Pot>();
         //private Transform _canvasTransform;
 
 
@@ -113,11 +111,6 @@ namespace ABU2021_ControlAndDebug.ViewModels
         {
             get => _tableHeight;
             private set { SetProperty(ref _tableHeight, value); }
-        }
-        public double PotDiameter
-        {
-            get => _potDiameter;
-            private set { SetProperty(ref _potDiameter, value); }
         }
         public Vector MapScale
         {
@@ -167,7 +160,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
         public bool IsMachineEnabled
         {
             get => _isMachineEnabled;
-            set { SetProperty(ref _isMachineEnabled, value); }
+            set { if (SetProperty(ref _isMachineEnabled, value)) Core.Pot.CommonVal.IsEnabled = value; }
         }
         public Vector MachineCenter
         {
@@ -198,65 +191,15 @@ namespace ABU2021_ControlAndDebug.ViewModels
             get => _table3Rot;
             private set { SetProperty(ref _table3Rot, value); }
         }
-        public Vector Pot1RightPoint
+        public ObservableNotifyCollection<Core.Pot> Pots
         {
-            get => _pot1RightPoint;
-            private set { SetProperty(ref _pot1RightPoint, value); }
-        }
-        public Vector Pot1LeftPoint
-        {
-            get => _pot1LeftPoint;
-            private set { SetProperty(ref _pot1LeftPoint, value); }
-        }
-        public Vector Pot2FrontPoint
-        {
-            get => _pot2FrontPoint;
-            private set { SetProperty(ref _pot2FrontPoint, value); }
-        }
-        public Vector Pot2BackPoint
-        {
-            get => _pot2BackPoint;
-            private set { SetProperty(ref _pot2BackPoint, value); }
-        }
-        public Vector Pot3Point
-        {
-            get => _pot3Point;
-            private set { SetProperty(ref _pot3Point, value); }
-        }
-        public double PotHitboxDiameter
-        {
-            get => _potHitboxDiameter;
-            private set { SetProperty(ref _potHitboxDiameter, value); }
-        }
-        public bool Pot1RightIsHighlighted
-        {
-            get => _pot1RightIsHighlighted;
-            private set { SetProperty(ref _pot1RightIsHighlighted, value); }
-        }
-        public bool Pot1LeftIsHighlighted
-        {
-            get => _pot1LeftIsHighlighted;
-            private set { SetProperty(ref _pot1LeftIsHighlighted, value); }
-        }
-        public bool Pot2FrontIsHighlighted
-        {
-            get => _pot2FrontIsHighlighted;
-            private set { SetProperty(ref _pot2FrontIsHighlighted, value); }
-        }
-        public bool Pot2BackIsHighlighted
-        {
-            get => _pot2BackIsHighlighted;
-            private set { SetProperty(ref _pot2BackIsHighlighted, value); }
-        }
-        public bool Pot3IsHighlighted
-        {
-            get => _pot3IsHighlighted;
-            private set { SetProperty(ref _pot3IsHighlighted, value); }
+            get => _pots;
+            private set { SetProperty(ref _pots, value); }
         }
         public Brush TeamColor
         {
             get => _teamColor;
-            private set { SetProperty(ref _teamColor, value); }
+            private set { if (SetProperty(ref _teamColor, value)) Core.Pot.CommonVal.Color = value; }
         }
         #endregion
         #endregion
@@ -272,7 +215,6 @@ namespace ABU2021_ControlAndDebug.ViewModels
         private ICommand _scrollViewer_ManipulationStarting;
         private ICommand _scrollViewer_ManipulationCompleted;
         private ICommand _scrollViewer_ManipulationDelta;
-        private ICommand _test_KeyDown;
 
         /// <summary>
         /// ScrollViewer上でのホイール回転をキャプチャ
@@ -302,7 +244,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
 
                           matrix.ScaleAt(scaleing, scaleing, Mouse.GetPosition(canvas).X, Mouse.GetPosition(canvas).Y);
                           canvas.LayoutTransform = new MatrixTransform(matrix);
-                          PotHitboxDiameter /= scaleing;
+                          Core.Pot.CommonVal.HitboxDiameter /= scaleing;
 
                           viewer.ScrollToHorizontalOffset((Mouse.GetPosition(viewer).X + viewHOffset) * scaleing - Mouse.GetPosition(viewer).X);
                           viewer.ScrollToVerticalOffset((Mouse.GetPosition(viewer).Y + viewVOffset) * scaleing - Mouse.GetPosition(viewer).Y);
@@ -322,15 +264,14 @@ namespace ABU2021_ControlAndDebug.ViewModels
 
 
                           #region get control
-                          var control = e.Source as UIElement;
 
                           //potCanvasをキャッチ
-                          var canvas = control?.Ancestor<Canvas>();
-                          if(canvas != null)
+                          var canvas = (e.OriginalSource as UIElement)?.Ancestor<Canvas>();
+                          if (canvas != null)
                           {
-                              if (Enum.IsDefined(typeof(Core.ControlType.Pot), canvas.Name))
+                              if (canvas.Tag is Core.ControlType.Pot)
                               {
-                                  Core.ControlType.Pot pot = (Core.ControlType.Pot)Enum.Parse(typeof(Core.ControlType.Pot), canvas.Name);
+                                  Core.ControlType.Pot pot = (Core.ControlType.Pot)canvas.Tag;
                                   CapturedPot = pot;
                                   IsPotCaptured = true;
                                   e.Handled = true;
@@ -338,6 +279,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
                               }
                           }
 
+                          var control = e.Source as UIElement;
                           var viewer = control?.Ancestor<ScrollViewer>();
                           if (viewer == null) return;
                           #endregion
@@ -345,7 +287,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
                           if (e.ChangedButton == MouseButton.Middle && e.ButtonState == MouseButtonState.Pressed)
                           {
                               _scrollViewerDragStart = e.GetPosition(viewer);
-                              control.CaptureMouse();
+                              viewer.CaptureMouse();
                           }
                           e.Handled = true;
                       }));
@@ -362,15 +304,13 @@ namespace ABU2021_ControlAndDebug.ViewModels
                     (_scrollViewer_MouseUp = CreateCommand(
                         (MouseButtonEventArgs e) => {
                             #region get control
-                            var control = e.Source as UIElement;
-
                             //potCanvasをキャッチ
-                            var canvas = control?.Ancestor<Canvas>();
+                            var canvas = (e.OriginalSource as UIElement)?.Ancestor<Canvas>();
                             if (canvas != null)
                             {
-                                if (Enum.IsDefined(typeof(Core.ControlType.Pot), canvas.Name) && e.ChangedButton == MouseButton.Left && e.ButtonState == MouseButtonState.Released)
+                                if (canvas.Tag is Core.ControlType.Pot && e.ChangedButton == MouseButton.Left && e.ButtonState == MouseButtonState.Released)
                                 {
-                                    Core.ControlType.Pot pot = (Core.ControlType.Pot)Enum.Parse(typeof(Core.ControlType.Pot), canvas.Name);
+                                    Core.ControlType.Pot pot = (Core.ControlType.Pot)canvas.Tag;
                                     if (IsPotCaptured && pot == CapturedPot)
                                     {
                                         IsPotCaptured = false;
@@ -382,12 +322,13 @@ namespace ABU2021_ControlAndDebug.ViewModels
 
 
 
-                            var viewer = control?.Ancestor<ScrollViewer>();
+                            var control = e.Source as UIElement;
+                            var viewer = control?.Ancestor<ScrollViewer>() ?? control as ScrollViewer;
                             if (viewer == null) return;
                             #endregion
 
                             if (e.ChangedButton == MouseButton.Middle && e.ButtonState == MouseButtonState.Released)
-                                control.ReleaseMouseCapture();
+                                viewer.ReleaseMouseCapture();
 
                         }));
             }
@@ -404,11 +345,11 @@ namespace ABU2021_ControlAndDebug.ViewModels
                       (MouseEventArgs e) => {
                           #region get control
                           var control = e.Source as UIElement;
-                          var viewer = control?.Ancestor<ScrollViewer>();
+                          var viewer = control?.Ancestor<ScrollViewer>() ?? control as ScrollViewer;
                           if (viewer == null) return;
                           #endregion
 
-                          if (control.IsMouseCaptured && (e.MiddleButton == MouseButtonState.Pressed))
+                          if (viewer.IsMouseCaptured && (e.MiddleButton == MouseButtonState.Pressed))
                           {
                               var move = _scrollViewerDragStart - Mouse.GetPosition(viewer);
 
@@ -431,11 +372,11 @@ namespace ABU2021_ControlAndDebug.ViewModels
                 (_scrollViewer_ManipulationStarting = CreateCommand(
                       (ManipulationStartingEventArgs e) =>
                       {
-                          switch (e.Source)
+                          switch (e.OriginalSource)
                           {
                               case Canvas canvas:
                                   {
-                                      Core.ControlType.Pot pot = (Core.ControlType.Pot)Enum.Parse(typeof(Core.ControlType.Pot), canvas.Name);
+                                      Core.ControlType.Pot pot = (Core.ControlType.Pot)canvas.Tag;
                                       CapturedPot = pot;
                                       IsPotCaptured = true;
                                   }
@@ -458,12 +399,12 @@ namespace ABU2021_ControlAndDebug.ViewModels
                 (_scrollViewer_ManipulationCompleted = CreateCommand(
                       (ManipulationCompletedEventArgs e) =>
                       {
-                          switch (e.Source)
+                          switch (e.OriginalSource)
                           {
                               case Canvas canvas:
                                   {
-                                      Core.ControlType.Pot pot = (Core.ControlType.Pot)Enum.Parse(typeof(Core.ControlType.Pot), canvas.Name);
-                                      if(IsPotCaptured && pot == CapturedPot)
+                                      Core.ControlType.Pot pot = (Core.ControlType.Pot)canvas.Tag;
+                                      if (IsPotCaptured && pot == CapturedPot)
                                       {
                                           IsPotCaptured = false;
                                           if (!PotClick(pot)) return;
@@ -520,25 +461,13 @@ namespace ABU2021_ControlAndDebug.ViewModels
                          {
                              matrix.ScaleAt(scaleing, scaleing, e.ManipulationOrigin.X, e.ManipulationOrigin.Y);
                              canvas.LayoutTransform = new MatrixTransform(matrix);
-                             PotHitboxDiameter /= scaleing;
+                             Core.Pot.CommonVal.HitboxDiameter /= scaleing;
                          }
 
                          viewer.ScrollToHorizontalOffset((e.ManipulationOrigin.X + viewHOffset) * scaleing - e.ManipulationOrigin.X - e.DeltaManipulation.Translation.X);
                          viewer.ScrollToVerticalOffset((e.ManipulationOrigin.Y + viewVOffset) * scaleing - e.ManipulationOrigin.Y - e.DeltaManipulation.Translation.Y);
                      }));
             }
-        }
-        public ICommand Test_KeyDown
-        {
-            get => _test_KeyDown ??
-                (_test_KeyDown = CreateCommand(
-                    (KeyEventArgs e) =>
-                    {
-                        if (DebugSate.IsUnlockUI)
-                        {
-                            Log.WiteLine(e.Key.ToString());
-                        }
-                    }));
         }
         #endregion
 
@@ -548,7 +477,7 @@ namespace ABU2021_ControlAndDebug.ViewModels
         {
             if (TR.IsEnabaled)
             {
-                TR.AddInjectQueue(pot, 0);
+                TR.TurnPot(pot);
                 return true;
             }
             return false;
@@ -574,27 +503,27 @@ namespace ABU2021_ControlAndDebug.ViewModels
         {
             if (e.PropertyName == nameof(MapProperty.Pot1RightPos))
             {
-                Pot1RightPoint = RealToCanvas(MapProperty.Pot1RightPos);
+                Pots[0].Point = RealToCanvas(MapProperty.Pot1RightPos);
             }
             else if (e.PropertyName == nameof(MapProperty.Pot1LeftPos))
             {
-                Pot1LeftPoint = RealToCanvas(MapProperty.Pot1LeftPos);
+                Pots[1].Point = RealToCanvas(MapProperty.Pot1LeftPos);
             }
             else if (e.PropertyName == nameof(MapProperty.Pot2FrontPos))
             {
-                Pot2FrontPoint = RealToCanvas(MapProperty.Pot2FrontPos);
+                Pots[2].Point = RealToCanvas(MapProperty.Pot2FrontPos);
                 var v = MapProperty.Pot2FrontPos - Models.MapProperty.Tabele2FrontPoint;
                 Table2FrontRot = Math.Atan2(v.Y, -v.X) * 180.0 / Math.PI;
             }
             else if (e.PropertyName == nameof(MapProperty.Pot2BackPos))
             {
-                Pot2BackPoint = RealToCanvas(MapProperty.Pot2BackPos);
+                Pots[3].Point = RealToCanvas(MapProperty.Pot2BackPos);
                 var v = MapProperty.Pot2BackPos - Models.MapProperty.Tabele2BackPoint;
                 Table2BackRot = Math.Atan2(v.Y, -v.X) * 180.0 / Math.PI;
             }
             else if (e.PropertyName == nameof(MapProperty.Pot3Pos))
             {
-                Pot3Point = RealToCanvas(MapProperty.Pot3Pos);
+                Pots[4].Point = RealToCanvas(MapProperty.Pot3Pos);
                 var v = MapProperty.Pot3Pos - Models.MapProperty.Tabele3Point;
                 Table3Rot = Math.Atan2(v.Y, -v.X) * 180.0 / Math.PI;
             }
@@ -619,32 +548,8 @@ namespace ABU2021_ControlAndDebug.ViewModels
             }
             if(e.PropertyName == nameof(TR.PotsQueue))
             {
-                Pot1RightIsHighlighted = false;
-                Pot1LeftIsHighlighted = false;
-                Pot2FrontIsHighlighted = false;
-                Pot2BackIsHighlighted = false;
-                Pot3IsHighlighted = false;
-                if(TR.PotsQueue.Count != 0)
-                {
-                    switch (TR.PotsQueue[0])
-                    {
-                        case Core.ControlType.Pot._1Right:
-                            Pot1RightIsHighlighted = true;
-                            break;
-                        case Core.ControlType.Pot._1Left:
-                            Pot1LeftIsHighlighted = true;
-                            break;
-                        case Core.ControlType.Pot._2Front:
-                            Pot2FrontIsHighlighted = true;
-                            break;
-                        case Core.ControlType.Pot._2Back:
-                            Pot2BackIsHighlighted = true;
-                            break;
-                        case Core.ControlType.Pot._3:
-                            Pot3IsHighlighted = true;
-                            break;
-                    }
-                }
+                foreach (var pot in Pots) pot.IsHighlighted = false;
+                if(TR.PotsQueue.Count != 0) Pots[(int)TR.PotsQueue[0]].IsHighlighted = true;
             }
         }
         private void DR_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)

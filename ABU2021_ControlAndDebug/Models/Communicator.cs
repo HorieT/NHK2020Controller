@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MVVMLib;
-using NativeWifi;
+using ManagedNativeWifi;
 using SharpDX.DirectInput;
 
 /// <summary>
@@ -25,6 +25,7 @@ namespace ABU2021_ControlAndDebug.Models
     {
         private OutputLog _log;
         private JoypadHandl _joypad;
+        private Config _config;
         private Timer _sendMsgTimer;
         private object _sendMsgLock = new object();
         private System.Threading.SemaphoreSlim _SendMsgSemaphore = new System.Threading.SemaphoreSlim(1, 1);
@@ -47,17 +48,18 @@ namespace ABU2021_ControlAndDebug.Models
         {
             _log = OutputLog.GetInstance;
             _joypad = JoypadHandl.GetInstance;
+            _config = Config.GetInstance;
             _mainContext = SynchronizationContext.Current;
             _checkNetworkTimer = new Timer(
                 _ => {
                     try
                         {
-                        var wlan = new WlanClient();
-                        var active = wlan.Interfaces.Where(net => net.InterfaceState == Wlan.WlanInterfaceState.Connected);
+                        
+                        var active = ManagedNativeWifi.NativeWifi.EnumerateConnectedNetworkSsids();
                         if (active.Count() != 0)
                         {
                             NetworkName =
-                                active.Aggregate("", (name, net) => name + System.Text.Encoding.ASCII.GetString(net.CurrentConnection.wlanAssociationAttributes.dot11Ssid.SSID) + ",");
+                                active.Aggregate("", (name, net) => name + net.ToString() + ",");
                         }
                         else
                         {
@@ -141,6 +143,7 @@ namespace ABU2021_ControlAndDebug.Models
 
             var ros = new Core.ComRos();
             ros.Port = machine;
+            ros.IP = _config.IP;
             try
             {
                 await ros.Connect();
@@ -218,7 +221,7 @@ namespace ABU2021_ControlAndDebug.Models
             catch
             {
                 _log.WiteErrorMsg("切断されました(sm)");
-                Disconnect();
+                _mainContext.Post(_ => Disconnect(), null);
                 throw;
             }
         }
@@ -233,7 +236,7 @@ namespace ABU2021_ControlAndDebug.Models
             catch
             {
                 _log.WiteErrorMsg("切断されました(rm)");
-                Disconnect();
+                _mainContext.Post(_ => Disconnect(), null);
                 throw;
             }
         }
@@ -249,6 +252,7 @@ namespace ABU2021_ControlAndDebug.Models
             {
                 if (!(_comDevice?.IsConnected ?? false))
                 {
+                    _sendMsgTimer?.Change(Timeout.Infinite, Timeout.Infinite);
                     _mainContext.Post(_ => Disconnect(), null);
                     _log.WiteErrorMsg("切断されました(pm)");
                     return;

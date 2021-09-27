@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ABU2021_ControlAndDebug"
+        xmlns:core="clr-namespace:ABU2021_ControlAndDebug.Core"
         xmlns:vmodel="clr-namespace:ABU2021_ControlAndDebug.ViewModels"
         xmlns:mvvm="clr-namespace:MVVMLib;assembly=MVVMLib"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
@@ -13,7 +14,10 @@
         WindowStyle="None"
         WindowState="Maximized"
         Topmost="True"
-        Title="MainWindow">
+        Title="MainWindow"
+        InputMethod.PreferredImeState="Off"
+        InputMethod.IsInputMethodEnabled="False">
+    <!--="{mvvm:InvokeCommand PreviewKeyDown}-->
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
     </Window.Resources>
@@ -21,8 +25,8 @@
         <vmodel:MainWindow/>
     </Window.DataContext>
     <Window.InputBindings>
-        <KeyBinding Gesture="Ctrl+DbeSbcsChar" Command="{Binding Ctrl0}"/><!-- Ctrl+Oem3 -->
-        <KeyBinding Gesture="Ctrl+OemEnlw" Command="{Binding Ctrl0}"/><!-- Ctrl+Oem3 -->
+        <KeyBinding Gesture="Ctrl+DbeSbcsChar" Command="{Binding Ctrl0}"/>
+        <KeyBinding Gesture="Ctrl+OemEnlw" Command="{Binding Ctrl0}"/>
         <KeyBinding Gesture="Ctrl+0" Command="{Binding Ctrl0}"/>
         <KeyBinding Gesture="Ctrl+1" Command="{Binding Ctrl1}"/>
         <KeyBinding Gesture="Ctrl+2" Command="{Binding Ctrl2}"/>
@@ -37,12 +41,12 @@
                 <RowDefinition Height="1*"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="3*"/>
-                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="4*"/>
+                <ColumnDefinition Width="9*"/>
             </Grid.ColumnDefinitions>
 
 
-            <Menu  Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" FontSize="14">
+            <Menu  Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" FontSize="15">
                 <Menu.DataContext>
                     <vmodel:MenuBar/>
                 </Menu.DataContext>
@@ -82,7 +86,7 @@
                         </MenuItem.ToolTip>
                     </MenuItem>
                 </MenuItem>
-                <MenuItem Header="表示(_V)" DockPanel.Dock="Left" Height="21" VerticalAlignment="Top">
+                <MenuItem Header="表示(_V)" DockPanel.Dock="Left">
                     <MenuItem Header="ジョイパッド入力(_I)" IsEnabled="{Binding IsCheckedJoypad}" 
                               Command="{Binding ViewJoypad_Click}" CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"/>
                     <Separator/>
@@ -96,17 +100,19 @@
                     <MenuItem Header="STM(USB)(_U)" IsCheckable="True" IsEnabled="{Binding IsEnableConnect}" IsChecked="{Binding IsCheckedStmUsb}" Command="{Binding ConnectStmUsb_Click}"/>
                     <Separator/>
                     <MenuItem Header="接続テスト(_G)" IsCheckable="True" IsEnabled="{Binding IsEnableConnect}" IsChecked="{Binding IsCheckedStmUsb}" Command="{Binding ConnectStmUsb_Click}"/>
+                    <MenuItem Header="IP変更(_I)" IsEnabled="False"/>
                     <Separator/>
                     <MenuItem Header="ジョイパッド(_J)" IsCheckable="True" IsChecked="{Binding IsCheckedJoypad}" Command="{Binding ActiveJoypad_Click}"/>
                 </MenuItem>
 
-                <MenuItem Header="{Binding ConnectedJoypadText}" DockPanel.Dock="Right" HorizontalAlignment="Right" Focusable="False" IsManipulationEnabled="False" IsEnabled="False"/>
-                <MenuItem Header="{Binding ConnectedText}" DockPanel.Dock="Right" HorizontalAlignment="Right" Focusable="False" IsManipulationEnabled="False" IsEnabled="False"/>
-                <MenuItem Header="{Binding WifiSSID}" DockPanel.Dock="Right" HorizontalAlignment="Right" Focusable="False" IsManipulationEnabled="False" IsEnabled="False"/>
+                <MenuItem Header="{Binding ConnectedJoypadText}" DockPanel.Dock="Right" Focusable="False" IsManipulationEnabled="False" IsEnabled="False"/>
+                <MenuItem Header="{Binding ConnectedText}" DockPanel.Dock="Right"  Focusable="False" IsManipulationEnabled="False" IsEnabled="False"/>
+                <MenuItem Header="{Binding WifiSSID}" DockPanel.Dock="Right"  Focusable="False" IsManipulationEnabled="False" IsEnabled="False"/>
+                <MenuItem DockPanel.Dock="Left" IsEnabled="False" />
             </Menu>
 
 
-            <TabControl Grid.Row="1" Grid.Column="0">
+            <TabControl Grid.Row="1" Grid.Column="1">
                 <TabItem Header="マップ" FontSize="8">
                     <TabItem.DataContext>
                         <vmodel:MapControl/>
@@ -114,7 +120,6 @@
                     <ScrollViewer HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" 
                                   IsManipulationEnabled="True"
                                   PanningMode="None"
-                                  KeyDown="{mvvm:InvokeCommand Test_KeyDown}"
                                   PreviewMouseWheel="{mvvm:InvokeCommand ScrollViewer_PreviewMouseWheel}" 
                                   PreviewMouseMove="{mvvm:InvokeCommand ScrollViewer_MouseMove}"
                                   PreviewMouseDown="{mvvm:InvokeCommand ScrollViewer_MouseDown}" 
@@ -122,14 +127,14 @@
                                   ManipulationCompleted="{mvvm:InvokeCommand ScrollViewer_ManipulationCompleted, Arg={x:Type input_t:ManipulationCompletedEventArgs}}"
                                   ManipulationStarting="{mvvm:InvokeCommand ScrollViewer_ManipulationStarting, Arg={x:Type input_t:ManipulationStartingEventArgs}}"
                                   ManipulationDelta="{mvvm:InvokeCommand ScrollViewer_ManipulationDelta, Arg={x:Type input_t:ManipulationDeltaEventArgs}}">
-                        <ItemsControl Margin="0">
+                        <ItemsControl>
                             <ItemsControl.Resources>
                                 <local:CenterOffsetConverter x:Key="CenterConv"/>
-                                
+
                                 <Storyboard x:Key="NextPotAnimation">
                                     <DoubleAnimation 
                                         Storyboard.TargetProperty="Width"
-                                        By="200" Duration="0:0:1"
+                                        By="250" Duration="0:0:1"
                                         RepeatBehavior="Forever" 
                                         AutoReverse="False">
                                         <DoubleAnimation.EasingFunction>
@@ -138,7 +143,7 @@
                                     </DoubleAnimation>
                                     <DoubleAnimation 
                                         Storyboard.TargetProperty="Height"
-                                        By="200" Duration="0:0:1"
+                                        By="250" Duration="0:0:1"
                                         RepeatBehavior="Forever" 
                                         AutoReverse="False">
                                         <DoubleAnimation.EasingFunction>
@@ -155,62 +160,9 @@
                                         </DoubleAnimation.EasingFunction>
                                     </DoubleAnimation>
                                 </Storyboard>
-                                
-                                <Style TargetType="Canvas" x:Key="PotBase">
-                                    <Setter Property="IsEnabled" Value="{Binding IsMachineEnabled}"/>
-                                    <Setter Property="Visibility" Value="{Binding IsMachineEnabled, Converter={StaticResource BoolToVisibility}}"/>
-                                    <Setter Property="IsManipulationEnabled" Value="True"/>
-                                </Style>
-                                <Style TargetType="Ellipse" x:Key="PotBack">
-                                    <Setter Property="Width" Value="{Binding PotHitboxDiameter}"/>
-                                    <Setter Property="Height" Value="{Binding PotHitboxDiameter}"/>
-                                    <Setter Property="Stroke" Value="Black"/>
-                                    <Setter Property="StrokeThickness" Value="1"/>
-                                    <Setter Property="Canvas.Left" Value="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"/>
-                                    <Setter Property="Canvas.Top" Value="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"/>
-                                    <Setter Property="Fill">
-                                        <Setter.Value>
-                                            <SolidColorBrush Color="SlateGray" Opacity="0.0"/>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                                <Style TargetType="Ellipse" x:Key="Pot">
-                                    <Setter Property="Stroke" Value="{Binding TeamColor}"/>
-                                    <Setter Property="StrokeThickness" Value="30"/>
-                                    <Setter Property="Width" Value="{Binding PotDiameter, Mode=OneTime}"/>
-                                    <Setter Property="Height" Value="{Binding PotDiameter, Mode=OneTime}"/>
-                                    <Setter Property="Canvas.Left" Value="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"/>
-                                    <Setter Property="Canvas.Top" Value="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"/>
-                                    <Setter Property="Fill">
-                                        <Setter.Value>
-                                            <SolidColorBrush Color="LightGray" Opacity="0.8"/>
-                                        </Setter.Value>
-                                    </Setter>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="True">
-                                            <DataTrigger.EnterActions>
-                                                <BeginStoryboard 
-                                                    x:Name="BeginPotEfect"
-                                                    Storyboard="{StaticResource NextPotAnimation}"/>
-                                            </DataTrigger.EnterActions>
-                                            <DataTrigger.ExitActions>
-                                                <StopStoryboard BeginStoryboardName="BeginPotEfect"/>
-                                            </DataTrigger.ExitActions>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                                <Style TargetType="TextBlock" x:Key="PotNum">
-                                    <Setter Property="FontSize" Value="70"/>
-                                    <Setter Property="Width" Value="90"/>
-                                    <Setter Property="Height" Value="90"/>
-                                    <Setter Property="TextAlignment" Value="Center"/>
-                                    <Setter Property="FontWeight" Value="Bold"/>
-                                    <Setter Property="Canvas.Left" Value="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"/>
-                                    <Setter Property="Canvas.Top" Value="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"/>
-                                </Style>
                             </ItemsControl.Resources>
-                            
-                            
+
+
                             <!--#region Map-->
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
@@ -231,7 +183,7 @@
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <!--#endregion-->
-                            
+
                             <!--#region Tables-->
                             <Image Source="{Binding MapProperty.Table2PictureSoruce, Mode=OneWay}"
                                    Height="{Binding TableHeight}"
@@ -273,7 +225,7 @@
                                 </Image.RenderTransform>
                             </Image>
                             <!--#endregion-->
-                            
+
                             <!--#region Machine -->
                             <Canvas x:Name="MachineCanvas" 
                                     IsEnabled="{Binding IsMachineEnabled}"
@@ -340,81 +292,71 @@
                             <!--#endregion-->
 
                             <!--#region Pots-->
-                            <!--コレクション化した方が良くない？-->
-                            <Canvas IsEnabled="{Binding IsMachineEnabled}" 
-                                    Visibility="{Binding IsMachineEnabled, Converter={StaticResource BoolToVisibility}}"
-                                    IsManipulationEnabled="True"
-                                    Name="_1Right">
-                                <Ellipse Style="{StaticResource PotBack}"/>
-                                <Ellipse Style="{StaticResource Pot}" Tag="{Binding Pot1RightIsHighlighted}"/>
-                                <TextBlock Text="0⃣" Style="{StaticResource PotNum}"/>
-                                <Canvas.RenderTransform>
-                                    <TransformGroup>
-                                        <TranslateTransform X="{Binding Pot1RightPoint.X, Mode=OneWay}"
-                                                            Y="{Binding Pot1RightPoint.Y, Mode=OneWay}"/>
-                                    </TransformGroup>
-                                </Canvas.RenderTransform>
-                            </Canvas>
-                            <Canvas IsEnabled="{Binding IsMachineEnabled}" 
-                                    Visibility="{Binding IsMachineEnabled, Converter={StaticResource BoolToVisibility}}" 
-                                    IsManipulationEnabled="True"
-                                    Name="_1Left">
-                                <Ellipse Style="{StaticResource PotBack}"/>
-                                <Ellipse Style="{StaticResource Pot}"  Tag="{Binding Pot1LeftIsHighlighted}"
-                                         Name="Pot1L_Ellipse"/>
-                                <TextBlock Text="1⃣" Style="{StaticResource PotNum}"/>
-                                <Canvas.RenderTransform>
-                                    <TransformGroup>
-                                        <TranslateTransform X="{Binding Pot1LeftPoint.X, Mode=OneWay}"
-                                                            Y="{Binding Pot1LeftPoint.Y, Mode=OneWay}"/>
-                                    </TransformGroup>
-                                </Canvas.RenderTransform>
-                            </Canvas>
-                            <Canvas IsEnabled="{Binding IsMachineEnabled}" 
-                                    Visibility="{Binding IsMachineEnabled, Converter={StaticResource BoolToVisibility}}" 
-                                    IsManipulationEnabled="True"
-                                    Name="_2Front">
-                                <Ellipse Style="{StaticResource PotBack}"/>
-                                <Ellipse Style="{StaticResource Pot}" Tag="{Binding Pot2FrontIsHighlighted}"
-                                         Name="Pot2F_Ellipse"/>
-                                <TextBlock Text="2⃣"  Style="{StaticResource PotNum}"/>
-                                <Canvas.RenderTransform>
-                                    <TransformGroup>
-                                        <TranslateTransform X="{Binding Pot2FrontPoint.X, Mode=OneWay}"
-                                                            Y="{Binding Pot2FrontPoint.Y, Mode=OneWay}"/>
-                                    </TransformGroup>
-                                </Canvas.RenderTransform>
-                            </Canvas>
-                            <Canvas IsEnabled="{Binding IsMachineEnabled}" 
-                                    Visibility="{Binding IsMachineEnabled, Converter={StaticResource BoolToVisibility}}" 
-                                    IsManipulationEnabled="True"
-                                    Name="_2Back">
-                                <Ellipse Style="{StaticResource PotBack}"/>
-                                <Ellipse Style="{StaticResource Pot}" Tag="{Binding Pot2BackIsHighlighted}"
-                                         Name="Pot2B_Ellipse"/>
-                                <TextBlock Text="3⃣"  Style="{StaticResource PotNum}"/>
-                                <Canvas.RenderTransform>
-                                    <TransformGroup>
-                                        <TranslateTransform X="{Binding Pot2BackPoint.X, Mode=OneWay}"
-                                                            Y="{Binding Pot2BackPoint.Y, Mode=OneWay}"/>
-                                    </TransformGroup>
-                                </Canvas.RenderTransform>
-                            </Canvas>
-                            <Canvas IsEnabled="{Binding IsMachineEnabled}" 
-                                    Visibility="{Binding IsMachineEnabled, Converter={StaticResource BoolToVisibility}}" 
-                                    IsManipulationEnabled="True"
-                                    Name="_3">
-                                <Ellipse Style="{StaticResource PotBack}"/>
-                                <Ellipse Style="{StaticResource Pot}" Tag="{Binding Pot3IsHighlighted}"
-                                         Name="Pot3_Ellipse"/>
-                                <TextBlock Text="4⃣"  Style="{StaticResource PotNum}"/>
-                                <Canvas.RenderTransform>
-                                    <TransformGroup>
-                                        <TranslateTransform X="{Binding Pot3Point.X, Mode=OneWay}"
-                                                            Y="{Binding Pot3Point.Y, Mode=OneWay}"/>
-                                    </TransformGroup>
-                                </Canvas.RenderTransform>
-                            </Canvas>
+                            <ItemsControl ItemsSource="{Binding Pots}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Canvas 
+                                            IsEnabled="{Binding CommonVal.IsEnabled}" 
+                                            Visibility="{Binding IsEnabled, RelativeSource={RelativeSource Self}, Converter={StaticResource BoolToVisibility}}" 
+                                            IsManipulationEnabled="True"
+                                            Tag="{Binding Tag}">
+                                            <Ellipse 
+                                                Width="{Binding CommonVal.HitboxDiameter, Mode=OneWay}"
+                                                Height="{Binding CommonVal.HitboxDiameter, Mode=OneWay}"
+                                                Stroke="Black"
+                                                StrokeThickness="1"
+                                                Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
+                                                Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}">
+                                                <Ellipse.Fill>
+                                                    <SolidColorBrush Color="SlateGray" Opacity="0.0"/>
+                                                </Ellipse.Fill>
+                                            </Ellipse>
+                                            <Ellipse 
+                                                Tag="{Binding IsHighlighted}"
+                                                Stroke="{Binding CommonVal.Color, Mode=OneWay}"
+                                                StrokeThickness="30"
+                                                Width="{Binding CommonVal.Diameter, Mode=OneTime}"
+                                                Height="{Binding CommonVal.Diameter, Mode=OneTime}"
+                                                Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
+                                                Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}">
+                                                <Ellipse.Fill>
+                                                    <SolidColorBrush Color="LightGray" Opacity="0.8"/>
+                                                </Ellipse.Fill>
+                                                <Ellipse.Style>
+                                                    <Style>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsHighlighted}" Value="True">
+                                                                <DataTrigger.EnterActions>
+                                                                    <BeginStoryboard x:Name="BeginPotEfect" Storyboard="{StaticResource NextPotAnimation}"/>
+                                                                </DataTrigger.EnterActions>
+                                                                <DataTrigger.ExitActions>
+                                                                    <StopStoryboard BeginStoryboardName="BeginPotEfect"/>
+                                                                </DataTrigger.ExitActions>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Ellipse.Style>
+                                            </Ellipse>
+                                            <TextBlock 
+                                                Text="{Binding Name}"
+                                                FontSize="70"
+                                                Width="90"
+                                                Height="90"
+                                                TextAlignment="Center"
+                                                FontWeight="Bold"
+                                                Canvas.Left="{Binding Width, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"
+                                                Canvas.Top="{Binding Height, RelativeSource={RelativeSource Self}, Converter={StaticResource CenterConv}}"/>
+                                            <Canvas.RenderTransform>
+                                                <TransformGroup>
+                                                    <TranslateTransform 
+                                                    X="{Binding Point.X, Mode=OneWay}"
+                                                    Y="{Binding Point.Y, Mode=OneWay}"/>
+                                                </TransformGroup>
+                                            </Canvas.RenderTransform>
+                                        </Canvas>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                             <!--#endregion-->
 
 
@@ -423,15 +365,26 @@
                 </TabItem>
             </TabControl>
 
+            <Canvas Grid.Row="1" Grid.Column="1">
+                <ProgressBar
+                    DockPanel.Dock="Right"
+                    Width="100"
+                    Height="13"
+                    Minimum="0"
+                    Maximum="{Binding InputTimeSpanMs, Mode=OneTime}"
+                    Value="{Binding StopwatchTime, Mode=OneWay}"
+                    Canvas.Top="30"
+                    Canvas.Left="10"/>
+            </Canvas>
 
-            <TabControl Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" Margin="5, 0, 0, 0"  FontSize="18">
+            <TabControl Grid.Row="1" Grid.Column="0" Grid.RowSpan="2" Margin="5, 0, 0, 0"  FontSize="18">
                 <TabItem Header="TR">
                     <TabItem.DataContext>
                         <vmodel:ControlTabTR/>
                     </TabItem.DataContext>
                     
                     <DockPanel IsEnabled="{ Binding IsEnabled}">
-                        <GroupBox DockPanel.Dock="Top" Header="ステータス" FontSize="10">
+                        <GroupBox DockPanel.Dock="Top" Header="ステータス" FontSize="12">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -447,20 +400,31 @@
                                 </Grid.ColumnDefinitions>
 
                                 <TextBlock 
-                                    Text="非常停止"
+                                    Text="MSG1"
                                     Grid.Row="0"
                                     Grid.Column="0"
-                                    Grid.ColumnSpan="2"
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Right"/>
+                                <TextBox 
+                                    Grid.Row="0"
+                                    Grid.Column="1"
                                     Margin="2"
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Center"/>
-                                <CheckBox 
+                                    IsReadOnly="True"
+                                    TextAlignment="Right"
+                                    Text="{Binding TR.Msg1, Mode=OneWay}"/>
+                                <TextBlock 
+                                    Text="MSG2"
                                     Grid.Row="0"
                                     Grid.Column="2"
-                                    HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
-                                    IsEnabled="False"/>
-                                <!--IsChecked="{Binding TR.IsOpenedRecovery, Mode=OneWay}"-->
+                                    HorizontalAlignment="Right"/>
+                                <TextBox 
+                                    Grid.Row="0"
+                                    Grid.Column="3"
+                                    Margin="2"
+                                    IsReadOnly="True"
+                                    TextAlignment="Right"
+                                    Text="{Binding TR.Msg2, Mode=OneWay}"/>
 
                                 <TextBlock 
                                     Text="ステータス"
@@ -528,7 +492,9 @@
                                         SmallChange="{Binding OffsetRadSliderSmall, Mode=OneTime}"
                                         LargeChange="{Binding OffsetRadSliderLarge, Mode=OneTime}"
                                         Value="{Binding OffsetRad}"
-                                        IsDirectionReversed="True">
+                                        IsDirectionReversed="True"
+                                        PreviewMouseDown="{mvvm:InvokeCommand Slider_PreviewMouseDown}" 
+                                        ManipulationStarting="{mvvm:InvokeCommand Slider_ManipulationStarting, Arg={x:Type input_t:ManipulationStartingEventArgs}}">
                                     </Slider>
                                     <TextBlock
                                         Grid.Column="0"
@@ -541,16 +507,16 @@
                                 </Grid>
                                 <Grid Margin="7">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="5*"/>
+                                        <ColumnDefinition Width="7*"/>
                                         <ColumnDefinition Width="2*"/>
-                                        <ColumnDefinition Width="5*"/>
+                                        <ColumnDefinition Width="7*"/>
                                         <ColumnDefinition Width="2*"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBox
                                         Grid.Column="0"
                                         Text="{Binding OffsetDegText}"
                                         IsEnabled="{Binding OffsetRadIsEq}"
-                                        FontSize="20"
+                                        FontSize="18"
                                         Margin="5"
                                         CommandManager.PreviewExecuted="{mvvm:InvokeCommand NoPasteTextBox_PreviewExecuted}"
                                         PreviewKeyDown="{mvvm:InvokeCommand InputDataTextBox_PreviewKeyDown}"
@@ -560,14 +526,14 @@
                                     <TextBlock
                                         Grid.Column="1"
                                         Text="°"
-                                        Margin="5"
+                                        Margin="3"
                                         VerticalAlignment="Top"
                                         HorizontalAlignment="Left"/>
                                     <TextBox
                                         Grid.Column="2"
                                         Text="{Binding OffsetRadText}"
                                         IsEnabled="{Binding OffsetRadIsEq}"
-                                        FontSize="20"
+                                        FontSize="18"
                                         Margin="5"
                                         CommandManager.PreviewExecuted="{mvvm:InvokeCommand NoPasteTextBox_PreviewExecuted}"
                                         PreviewKeyDown="{mvvm:InvokeCommand InputDataTextBox_PreviewKeyDown}"
@@ -577,7 +543,7 @@
                                     <TextBlock
                                         Grid.Column="3"
                                         Text="rad"
-                                        Margin="5"
+                                        Margin="3"
                                         VerticalAlignment="Bottom"
                                         HorizontalAlignment="Left"/>
                                 </Grid>
@@ -591,25 +557,25 @@
                                     <Button
                                         Grid.Column="0"
                                         Margin="3"
-                                        FontSize="8"
+                                        FontSize="9"
                                         Command="{Binding OffsetDegIncLButton_Click}"
                                         Content="&lt;&lt;[0.5°]"/>
                                     <Button
                                         Grid.Column="1"
                                         Margin="3"
-                                        FontSize="8"
+                                        FontSize="9"
                                         Command="{Binding OffsetDegIncSButton_Click}"
                                         Content="&lt;&lt;[0.05°]"/>
                                     <Button
                                         Grid.Column="2"
                                         Margin="3"
-                                        FontSize="8"
+                                        FontSize="9"
                                         Command="{Binding OffsetDegDecSButton_Click}"
                                         Content="[-0.05°] &gt;&gt;"/>
                                     <Button
                                         Grid.Column="3"
                                         Margin="3"
-                                        FontSize="8"
+                                        FontSize="9"
                                         Command="{Binding OffsetDegDecLButton_Click}"
                                         Content="[-0.5°] &gt;&gt;"/>
                                 </Grid>
@@ -623,7 +589,7 @@
                             </GroupBox.Resources>
                             <DataGrid 
                                 FontSize="24"
-                                ItemsSource="{Binding TR.PotsQueue}"
+                                ItemsSource="{Binding PotsQueue}"
                                 HorizontalScrollBarVisibility="Disabled"
                                 AutoGenerateColumns="False"
                                 CanUserAddRows="False" 
@@ -639,7 +605,7 @@
                                 SelectedIndex="{Binding InjectQueueSelectedIndex}"
                                 SelectedCellsChanged="{mvvm:InvokeCommand InjectQueue_SelectedCellChanged}">
                                 <DataGrid.Columns>
-                                    <DataGridTemplateColumn Width="0.9*" Header="Num" IsReadOnly="True">
+                                    <DataGridTemplateColumn Width="0.9*" Header="Top 5" IsReadOnly="True">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding Path=., Converter={StaticResource PotNameConv}, Mode=OneWay}"
@@ -754,7 +720,7 @@
 
 
 
-            <TabControl Grid.Row="2" Grid.Column="0"  Margin="0, 5, 0, 0">
+            <TabControl Grid.Row="2" Grid.Column="1"  Margin="0, 5, 0, 0">
                 <TabItem Header="出力" FontSize="8">
                     <TabItem.DataContext>
                         <vmodel:OutputLog/>
@@ -766,13 +732,14 @@
                         IsReadOnlyCaretVisible="True"
                         FontSize="10" 
                         Text="{Binding Log.Text}"
-                        TextChanged="{mvvm:InvokeCommand Log_TextChanged}"/>
+                        TextChanged="{mvvm:InvokeCommand Log_TextChanged}"
+                        KeyDown="{mvvm:InvokeCommand Test_KeyDown}"/>
                 </TabItem>
             </TabControl>
 
 
             <GridSplitter 
-                Grid.Row="2" Grid.Column="0"
+                Grid.Row="2" Grid.Column="1"
                 HorizontalAlignment="Stretch" VerticalAlignment="Top" Height="5"/>
             <GridSplitter 
                 Grid.Row="1" Grid.Column="1" Grid.RowSpan="2"

@@ -14,11 +14,13 @@ namespace ABU2021_ControlAndDebug.ViewModels
     {
         #region Models
         public Models.OutputLog Log { get; private set; }
+        public Models.DebugSate DebugSate { get; private set; }
         #endregion
 
 
         #region Command
         private ICommand _log_TextChanged;
+        private ICommand _test_KeyDown;
 
         public ICommand Log_TextChanged
         {
@@ -34,12 +36,25 @@ namespace ABU2021_ControlAndDebug.ViewModels
                         }));
             }
         }
+        public ICommand Test_KeyDown
+        {
+            get => _test_KeyDown ??
+                (_test_KeyDown = CreateCommand(
+                    (KeyEventArgs e) =>
+                    {
+                        if (DebugSate.IsUnlockUI)
+                        {
+                            Log.WiteLine(e.Key.ToString());
+                        }
+                    }));
+        }
         #endregion
 
         #region Method
         public OutputLog()
         {
             Log = Models.OutputLog.GetInstance;
+            DebugSate = Models.DebugSate.GetInstance;
         }
         #endregion
     }

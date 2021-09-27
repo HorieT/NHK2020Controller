@@ -9,9 +9,12 @@ namespace ABU2021_ControlAndDebug.Core
 {
     /// <summary>
     /// 定数定義
+    /// ここはデフォルトの定義にして呼び出しはModel.Configに移したい
     /// </summary>
     static class ControlType
     {
+        public static readonly string CONFIG_FILE_NAME = "config";
+
         public enum Device : int
         {
             TR = 0,
@@ -39,7 +42,7 @@ namespace ABU2021_ControlAndDebug.Core
         }
 
 
-        public static readonly string TCP_IP_ADDRESS = "10.42.0.1";
+        public static readonly string TCP_IP_ADDRESS = "10.42.0.50";//"192.168.43.240";//"10.42.0.1";
         //public static readonly string TCP_IP_ADDRESS = "192.168.179.6";//確認用
 
         public enum TcpPort : int
